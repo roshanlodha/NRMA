@@ -5,6 +5,7 @@ from scipy.optimize import linear_sum_assignment
 np.random.seed(44106)
 
 preference_df = pd.read_csv("/work/preferences.csv")
+# df = df.sample(frac=1).reset_index(drop=True) # shuffle the students so order no longer leads to preference
 studentIDs = preference_df['studentID']
 n_student = len(studentIDs)
 preference_df
