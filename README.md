@@ -12,4 +12,5 @@ source from Alan and Tori
 1. summary/key findings
 2. discussion of optimality and completeness
 3. future endeavors including skew cost with cost modifying functions
+4. discussion of game theory and optimal student strategy
 ## References
