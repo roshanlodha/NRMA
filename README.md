@@ -1,6 +1,8 @@
 # Determining Rotation Matching Using Linear Sum Optimization
 ## Authors
 1. <sup>a</sup>[Roshan Lodha](https://roshanlodha.github.io)
+2. <sup>a</sup>[Tori Rogness]()
+3. <sup>a</sup>[Neil Mehta]()
 
 <sup>a</sup>Cleveland Clinic Lerner College of Medicine 
 ## Introduction
