@@ -30,7 +30,7 @@ Linear sum optimization requires a wide or square matrix. Thus, we add phantom s
 The optimal rotation order was calculated by feeding the resulting square cost matrix into a python based linear sum optimizer. The resulting solution was both complete and optimal in that each student was assigned to a single rotation orer and that no single swap between two students would benefit both.
 
 ### Error Testing
-To determine the performance of the rotation assignment, we defined a novel error metric, ε, as the `total_cost / n / b`. The range of ε was [0, 1], with a lower ε representing better performance. 
+To determine the performance of the rotation assignment, we defined a novel error metric, δ, as the `total_cost / n / b`, {δ ∈ R | [0, 1]}. 
 
 ## Results
 1. source from Alan and Tori
