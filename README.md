@@ -32,8 +32,10 @@ To determine the performance of the rotation assignment, we defined a novel erro
 
 ## Results
 ![error by number of students](./students_error.png)
-2. compare number of post-assignment swaps from previous years vs this year
-3. real world this year (number of swaps, satisfaction, etc.)
+![error by number of beans](./beans_error.png)
+
+1. compare number of post-assignment swaps from previous years vs this year
+2. real world this year (number of swaps, satisfaction, etc.)
 
 ## Discussion
 1. summary/key findings

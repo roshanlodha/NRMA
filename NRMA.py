@@ -3,6 +3,8 @@ import numpy as np
 
 # using optimized linear sums problem solver
 from scipy.optimize import linear_sum_assignment
+# used for optimal number of beans
+from scipy.special import factorial
 # np.random.seed(44106)
 
 # mutable global variables
@@ -15,6 +17,7 @@ penalty = "beans"
 n_beans = 24
 simulate = True
 n_student = 7
+n_rotations = 4
 
 # definitions and converters
 rotationdict = {0: "Option 1", 1: "Option 2", 2: "Option 3", 3: "Option 4"}
@@ -26,7 +29,7 @@ option_to_order_dict = {
 }
 
 def create_cost_matrix():
-	cost_matrix = np.random.randint(n_beans // 4, size = (75, 4))
+	cost_matrix = np.random.randint(n_beans // n_rotations, size = (75, n_rotations))
 	return pad_matrix(cost_matrix)
 
 def build_cost_matrix(preference_df):
@@ -60,11 +63,11 @@ def pad_matrix(cost):
 	global phantom_students
 	phantom_students = 0
 
-	while np.shape(cost)[0] % 4 != 0:
+	while np.shape(cost)[0] % n_rotations != 0:
 		cost = np.vstack([cost, [n_beans, n_beans, n_beans, n_beans]])
 		phantom_students += 1
 
-	cost = np.tile(cost, (1, np.shape(cost)[0] // 4))
+	cost = np.tile(cost, (1, np.shape(cost)[0] // n_rotations))
 	return cost
 
 
@@ -77,7 +80,7 @@ def rotation_calc(cost):
 	row_ind, col_ind = linear_sum_assignment(cost)
 	err = cost[row_ind, col_ind].sum()
 
-	rotation_index = col_ind % 4  # re-wraps the indicies to their human readable form
+	rotation_index = col_ind % n_rotations # re-wraps the indicies to their human readable form
 	rotations = [rotationdict.get(index) for index in rotation_index]
 	# update_cost_matrix(row_ind, rotation_index)
 
@@ -165,12 +168,28 @@ def plot_students():
 	import matplotlib.pyplot as plt
 	import seaborn as sns
 
-	sns.lineplot(data = error_df, x = "students", y = "error", errorbar='sd').set(title = 'Number of Students vs Error')
+	sns.lineplot(data = error_df, x = "students", y = "error", errorbar = 'sd').set(title = 'Number of Students vs Error')
 	plt.savefig('students_error.png')
+	plt.clf()
+
+def plot_beans():
+	import matplotlib.pyplot as plt
+	import seaborn as sns
+
+	sns.lineplot(data = error_df, x = "beans", y = "error", errorbar = 'sd').set(title = 'Number of Beans vs Error')
+	plt.savefig('beans_error.png')
+	plt.clf()
 
 error_df = pd.DataFrame(columns = ['students', 'beans', 'error'])
-for i in range(7, 301):
+for i in range(2 * n_rotations - 1, 301):
 	n_student = i
 	for j in range(10):
 		main()
 plot_students()
+
+error_df = pd.DataFrame(columns = ['students', 'beans', 'error'])
+for i in range(factorial(n_rotations, exact=True), 96):
+	n_beans = i
+	for j in range(10):
+		main()
+plot_beans()
