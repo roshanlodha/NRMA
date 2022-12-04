@@ -22,35 +22,54 @@ Students were given `b` "beans" and were asked to divide assign these beans howe
 ### Algorithm Design
 
 #### Matrix Padding
-Linear sum optimization requires a wide or square matrix. Thus, we add phantom students with no rotation order preference until the number of rows is 0 in moduli space `k`. Subsequently, we tile the matrix to a width of `ceiling(n / k)` resulting in a `ceiling(n / k) * k` by `ceiling(n / k) * k` square matrix. The row order was then randomly shuffled to ensure that submission time was not a factor in determining rotation order preference. 
+Linear sum optimization requires a wide or square matrix. Thus, we add phantom students with no rotation order preference until the number of rows is 0 in moduli space `k`. Subsequently, we tile the matrix to a width of `⌈n / k⌉` resulting in a `⌈n / k⌉ * k` by `⌈n / k⌉ * k` square matrix. The row order was randomly shuffled to ensure that submission time was not a factor in determining rotation order preference. 
 
 #### Linear Sum Optimization
-The optimal rotation order was calculated by feeding the resulting square cost matrix into a python based linear sum optimizer. The resulting solution was both complete and optimal in that each student was assigned to a single rotation orer and that no single swap between two students would benefit both.
+The optimal rotation order was calculated by calculating the linear sum optimization on the padded, square cost matrix in Python (SciPy: 1.9.3, Python 3.9.6).
 
 ### Error Testing
 To determine the performance of the rotation assignment, we defined a novel error metric, δ, as the `total_cost / n / b, {δ ∈ R | [0, 1]}`. 
 
 ## Results
 
-
 ### The optimal number of beans is highly variable.
 An optimal number of beans was selected using hyperparameter optimization. For ease of student use, the minimum number of beans was chosen to be `k!`, as it allows for integer divisions between rotation orders. Testing across a wide range of beans revealed that a minimum number of beans minimized error (Figure 1). The cost matrix was sampled randomly and uniformly.
-![Figure 1. Error versus number of beans](./plots/beans_error.png)
-*Error as a function of number of beans.*
+
+| ![Figure 1](./plots/beans_error.png) |
+|:--:| 
+| *Figure 1. Error versus number of beans.* |
+
 Analysis of a sample set of real world data showed a skew towards certain rotation orders. Further testing must be done to determine how the number of beans effect the overall error under various sampling distributions. We hypothesize that in real world deployment, increasing the number of beans would decrease the error due to sampling skew and a maximal difference between costs for a given student.
 
 ### The error reduces as the number of students increases. 
-As the number of students increases, the total delta error decreased exponentially (Figure 2). In other words, the error was roughly constant despite increasing the number of students, suggesting better performance as the number of students increases. 
-![Figure 2. Error versus number of students](./plots/students_error.png)
+As the number of students increases, the total delta error decreased exponentially (Figure 2). In other words, the error was roughly constant despite increasing the number of students, suggesting better performance as the number of students increases.
+
+| ![Figure 2](./plots/students_error.png) |
+|:--:| 
+| *Figure 2. Error versus number of students.* |
 
 ### Deployment and Student Satisfaction
 * real world this year (number of swaps, satisfaction, etc.)
 * compare number of post-assignment swaps from previous years vs this year
 
 ## Discussion
+
+### Key Findings
+
+
+### Optimality and Completeness
+In our problem, optimality was defined as a rotation order assignment in which no single swap would benefit all students involved in the swap. Completeness was defined as both an equal number of students assigned to each rotation order as well as all students being assigned to exactly 1 rotation order. In the case that the number of students was not 0 in the moduli space `k`, completeness was defined as a difference of no more than 1 student between the most filled and least filled rotation group. Linear sum optimization provides an optimal solution by definition. Completeness was ensured by matrix padding.
+
+### Limitations
+Real world behavior 
+
 1. summary/key findings
 2. discussion of optimality and completeness
 3. future endeavors including skew cost with cost modifying functions
 4. discussion of game theory and optimal student strategy
 
 ## References
+1.  Munkres J. Algorithms for the Assignment and Transportation Problems. Journal of the Society for Industrial and Applied Mathematics 1957;5(1):32–8. 
+2.  Crouse DF. On implementing 2D rectangular assignment algorithms. IEEE Transactions on Aerospace and Electronic Systems 2016;52(4):1679–96. 
+3.  Kuhn HW. The Hungarian method for the assignment problem. Naval Research Logistics Quarterly 1955;2(1–2):83–97. 
+4.  Kuhn HW. Variants of the hungarian method for assignment problems. Naval Research Logistics Quarterly 1956;3(4):253–8. 
