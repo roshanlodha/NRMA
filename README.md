@@ -57,16 +57,38 @@ As the number of students increases, the total delta error decreased exponential
 ### Key Findings
 
 
-### Optimality and Completeness
+#### Optimality and Completeness
 In our problem, optimality was defined as a rotation order assignment in which no single swap would benefit all students involved in the swap. Completeness was defined as both an equal number of students assigned to each rotation order as well as all students being assigned to exactly 1 rotation order. In the case that the number of students was not 0 in the moduli space `k`, completeness was defined as a difference of no more than 1 student between the most filled and least filled rotation group. Linear sum optimization provides an optimal solution by definition. Completeness was ensured by matrix padding.
 
-### Limitations
-Real world behavior 
+#### Limitations
+Real world behavior in rotation order selection is poorly modeled by a uniform distribution. Sampling of students preferences reveals high preferences for certain rotation orders. In practice, we found that rotation order 4 > rotation order 3 > rotation order 2 > rotation order 1 (Table 1).
 
-1. summary/key findings
-2. discussion of optimality and completeness
-3. future endeavors including skew cost with cost modifying functions
-4. discussion of game theory and optimal student strategy
+| Option | Order                    | Beans Assigned | Number First Choice |
+|--------|--------------------------|----------------|---------------------|
+| 1      | LAB - TBC2 - TBC3 - TBC1 |                |                     |
+| 2      | TBC2 - LAB - TBC1 - TBC3 |                |                     |
+| 3      | TBC3 - TBC1 - LAB - TBC2 |                |                     |
+| 4      | TBC1 - TBC3 - TBC2 - LAB |                |                     |
+|:--:| 
+| *Table 1. Findings from real-world deployment.* |
+
+This selection lead to an increased number of students recieving a deeply unfavorable rotation order based on their choice of bean assignment. 
+
+#### Optimal Student Strategy
+Due to a student-determined cost penalty and the unequal popularity of certain rotations, students could employ game theory to optimize their odds of recieving a certain rotation. For simplicity, consider a scenario with 75 students, where every student wanted rotation order 1 and no students wanted rotation order 4. In this case, only a maximum of 19 students could recieve the top choice rotation. Thus, students had the option of assigning all their beans to rotation order 1 to maximize their chance of getting this rotation. However, if more than 19 students employed this strategy, several would be randomly assigned to a different rotation. Due to the relative unpopularity of rotation order 4, it is likely that most of these students would be assigned to this rotation. Hence, it may benefit students to "take the L" and assign all their beans to their second choice rotation.
+
+Our algorithm allows for easy modification and eliminated of this aspect by having students rank their preferences followed by deterministic assigning a cost penalty to an unfavorable rotation order without the students consultation. In practice, this was not used as to increase input from students. 
+
+### Future Directions
+
+#### Skewed Costs
+Applying a weight to the cost matrix can skew the results to avoid assigning students to their last-choice preference. For example, adding an exponential penalty would more significantly penalize rotation orders with fewer beans, skewing the optimal result away from those set of solutions. Our algorithm allows for easy modification of a cost matrix. Hyperparameter optimization should be used to determine the best cost penality function for a given application. 
+
+#### Adding Distance Penalties
+Within each rotation, students can be placed at several sites. Suburban hospital campuses pose an additional cost to students in the form of travel. Future iterations of a non-random rotation matching algorithm can modify the cost function based on the distance a student has to travel to a given rotation. An example implementation could be to recursively run the algorithm within each rotation assignment using the distance traveled in miles as the of a rotation.
+
+#### Adding Couples Matching
+Often, students live with another medical student partner. In order to encourage carpooling, the cost function can be further modified to increase the odds that two students are placed in the same rotation.
 
 ## References
 1.  Munkres J. Algorithms for the Assignment and Transportation Problems. Journal of the Society for Industrial and Applied Mathematics 1957;5(1):32–8. 
