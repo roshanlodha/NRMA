@@ -9,8 +9,8 @@ from scipy.optimize import linear_sum_assignment
 global preference_df
 global studentIDs
 global phantom_students
+global error_df
 
-# static variables
 penalty = "beans"
 n_beans = 24
 simulate = True
@@ -87,11 +87,14 @@ def rotation_calc(cost):
 
 
 def analyze(optimal_order, optimal_order_err, performance=None):
-	print(
-		f"Average error of assignment for first rotation:",
-		optimal_order_err / n_student / n_beans,
-	)
+	global error_df
+	delta = optimal_order_err / n_student / n_beans
+	
 	if not simulate:
+		print(
+			f"Average error of assignment for first rotation:",
+			delta,
+		)
 		matches = sum(
 			preference_df.drop(columns=["studentID"]).idxmax(axis=1)
 			== performance["optimal_rotation"]
@@ -100,6 +103,11 @@ def analyze(optimal_order, optimal_order_err, performance=None):
 			f"Percent of students who recieved their first choice rotation:",
 			matches / n_student,
 		)
+	else:
+		temp_df = pd.DataFrame(data = [[n_student, n_beans, delta]], 
+		# temp_df = pd.DataFrame(data = [[n_student, n_beans, optimal_order_err]], 
+			columns = ['students', 'beans', 'error'])
+		error_df = pd.concat([error_df, temp_df])
 
 
 def to_string(optimal_order, optimal_order_err):
@@ -130,7 +138,7 @@ def update_cost_matrix(row_ind, col_ind):
 
 def main():
 	if simulate:
-		cost = create_cost_matrix()
+		cost = create_cost_matrix()		
 	else:
 		# load preference dataframe
 		global preference_df
@@ -153,4 +161,16 @@ def main():
 
 	analyze(optimal_order, optimal_order_err, performance)
 
-main()
+def plot_students():
+	import matplotlib.pyplot as plt
+	import seaborn as sns
+
+	sns.lineplot(data = error_df, x = "students", y = "error", errorbar='sd').set(title = 'Number of Students vs Error')
+	plt.savefig('students_error.png')
+
+error_df = pd.DataFrame(columns = ['students', 'beans', 'error'])
+for i in range(7, 301):
+	n_student = i
+	for j in range(10):
+		main()
+plot_students()
