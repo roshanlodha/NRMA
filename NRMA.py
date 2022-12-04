@@ -169,7 +169,7 @@ def plot_students():
 	import seaborn as sns
 
 	sns.lineplot(data = error_df, x = "students", y = "error", errorbar = 'sd').set(title = 'Number of Students vs Error')
-	plt.savefig('students_error.png')
+	plt.savefig('./plots/students_error.png')
 	plt.clf()
 
 def plot_beans():
@@ -177,7 +177,7 @@ def plot_beans():
 	import seaborn as sns
 
 	sns.lineplot(data = error_df, x = "beans", y = "error", errorbar = 'sd').set(title = 'Number of Beans vs Error')
-	plt.savefig('beans_error.png')
+	plt.savefig('./plots/beans_error.png')
 	plt.clf()
 
 error_df = pd.DataFrame(columns = ['students', 'beans', 'error'])

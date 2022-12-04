@@ -31,8 +31,8 @@ The optimal rotation order was calculated by feeding the resulting square cost m
 To determine the performance of the rotation assignment, we defined a novel error metric, δ, as the `total_cost / n / b`, {δ ∈ R | [0, 1]}. 
 
 ## Results
-![error by number of students](./students_error.png)
-![error by number of beans](./beans_error.png)
+![error by number of students](./plots/students_error.png)
+![error by number of beans](./plots/beans_error.png)
 
 1. compare number of post-assignment swaps from previous years vs this year
 2. real world this year (number of swaps, satisfaction, etc.)
