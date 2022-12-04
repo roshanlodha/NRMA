@@ -69,7 +69,7 @@ Real world behavior in rotation order selection is poorly modeled by a uniform d
 | 2      | TBC2 - LAB - TBC1 - TBC3 |                |                     |
 | 3      | TBC3 - TBC1 - LAB - TBC2 |                |                     |
 | 4      | TBC1 - TBC3 - TBC2 - LAB |                |                     |
-|:--:| 
+
 | *Table 1. Findings from real-world deployment.* |
 
 This selection lead to an increased number of students recieving a deeply unfavorable rotation order based on their choice of bean assignment. 
