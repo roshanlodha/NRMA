@@ -1,7 +1,7 @@
 # Determining Rotation Matching Using Linear Sum Optimization
 ## Authors
 1. <sup>a</sup>[Roshan Lodha](https://roshanlodha.github.io)
-2. <sup>a</sup>[Neil Mehta]()
+2. <sup>a</sup>Neil Mehta, <sup>a</sup>Craig Nielsen
 
 <sup>a</sup>Cleveland Clinic Lerner College of Medicine 
 ## Introduction
@@ -28,14 +28,24 @@ Linear sum optimization requires a wide or square matrix. Thus, we add phantom s
 The optimal rotation order was calculated by feeding the resulting square cost matrix into a python based linear sum optimizer. The resulting solution was both complete and optimal in that each student was assigned to a single rotation orer and that no single swap between two students would benefit both.
 
 ### Error Testing
-To determine the performance of the rotation assignment, we defined a novel error metric, δ, as the `total_cost / n / b`, {δ ∈ R | [0, 1]}. 
+To determine the performance of the rotation assignment, we defined a novel error metric, δ, as the `total_cost / n / b, {δ ∈ R | [0, 1]}`. 
 
 ## Results
-![error by number of students](./plots/students_error.png)
-![error by number of beans](./plots/beans_error.png)
 
-1. compare number of post-assignment swaps from previous years vs this year
-2. real world this year (number of swaps, satisfaction, etc.)
+
+### The optimal number of beans is highly variable.
+An optimal number of beans was selected using hyperparameter optimization. For ease of student use, the minimum number of beans was chosen to be `k!`, as it allows for integer divisions between rotation orders. Testing across a wide range of beans revealed that a minimum number of beans minimized error (Figure 1). The cost matrix was sampled randomly and uniformly.
+![Figure 1. Error versus number of beans](./plots/beans_error.png)
+*Error as a function of number of beans.*
+Analysis of a sample set of real world data showed a skew towards certain rotation orders. Further testing must be done to determine how the number of beans effect the overall error under various sampling distributions. We hypothesize that in real world deployment, increasing the number of beans would decrease the error due to sampling skew and a maximal difference between costs for a given student.
+
+### The error reduces as the number of students increases. 
+As the number of students increases, the total delta error decreased exponentially (Figure 2). In other words, the error was roughly constant despite increasing the number of students, suggesting better performance as the number of students increases. 
+![Figure 2. Error versus number of students](./plots/students_error.png)
+
+### Deployment and Student Satisfaction
+* real world this year (number of swaps, satisfaction, etc.)
+* compare number of post-assignment swaps from previous years vs this year
 
 ## Discussion
 1. summary/key findings
