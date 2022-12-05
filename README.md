@@ -51,6 +51,7 @@ As the number of students increases, the total delta error decreased exponential
 ### Deployment and Student Satisfaction
 * real world this year (number of swaps, satisfaction, etc.)
 * compare number of post-assignment swaps from previous years vs this year
+* add "what would you like to see in the algo" to satisfaction survey
 
 ## Discussion
 
