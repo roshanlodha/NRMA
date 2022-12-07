@@ -13,9 +13,9 @@ global studentIDs
 global phantom_students
 global error_df
 
+simulate = True
 penalty = "beans"
 n_beans = 24
-simulate = True
 n_student = 7
 n_rotations = 4
 
@@ -29,7 +29,12 @@ option_to_order_dict = {
 }
 
 def create_cost_matrix():
+	# add penalty
 	cost_matrix = np.random.randint(n_beans // n_rotations, size = (75, n_rotations))
+	if penalty == "beans":
+		pass
+	elif penalty == "linear":
+		cost_matrix = np.random.randint(n_rotations, size = (75, n_rotations))
 	return pad_matrix(cost_matrix)
 
 def build_cost_matrix(preference_df):
@@ -49,10 +54,17 @@ def build_cost_matrix(preference_df):
 	if penalty == "beans":
 		pass
 	elif penalty == "linear":
-		pass
+		cost_matrix = cost_to_rank(cost_matrix)
 
 	return pad_matrix(cost_matrix)
 
+def cost_to_rank(cost_matrix):
+	"""
+	convert the number of beans to an optimal cost 
+	"""
+	for i in range(n_rotations):
+		cost_matrix[np.where(cost_matrix == np.max(cost_matrix))] = i # WLOG, max == min
+	return cost_matrix
 
 def pad_matrix(cost):
 	"""
