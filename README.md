@@ -1,11 +1,12 @@
 # Determining Rotation Matching Using Linear Sum Optimization
 ## Authors
 1. <sup>a</sup>[Roshan Lodha](https://roshanlodha.github.io)
-2. <sup>a</sup>Neil Mehta, <sup>a</sup>Craig Nielsen
+2. <sup>a</sup>[Tori Rogness](), <sup>a</sup>[Alan Shen]()
+3. <sup>a</sup>Neil Mehta, <sup>a</sup>Craig Nielsen
 
 <sup>a</sup>Cleveland Clinic Lerner College of Medicine 
 ## Introduction
-Third-year medical students complete a series of core rotations in internal medicine, surgery, paediatrics, obstetrics, gynecology, neurology, psychiatry, and family medicine. Elective rotations often require a prerequisite core rotation; for example, to enroll in the orthopedics elective, students must first complete the core surgery rotation. Thus, students tend to have a preference for the order in which they are assigned to these rotations.
+Third-year medical students complete a series of core rotations in internal medicine, surgery, pediatrics, obstetrics, gynecology, neurology, psychiatry, and family medicine. Elective rotations often require a prerequisite core rotation; for example, to enroll in the orthopedics elective, students must first complete the core surgery rotation. Thus, students tend to have a preference for the order in which they are assigned to these rotations.
 
 {tori can you help with the introduction? it would be helpful to pull statistics from online about medical students and specalities and such}
 
