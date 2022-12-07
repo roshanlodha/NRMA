@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-# using optimized linear sums problem solver
+# using optimized elinear sums problem solver
 from scipy.optimize import linear_sum_assignment
 # used for optimal number of beans
 from scipy.special import factorial
@@ -14,7 +14,7 @@ global phantom_students
 global error_df
 
 simulate = True
-penalty = "beans"
+penalty = "linear"
 n_beans = 24
 n_student = 7
 n_rotations = 4
@@ -63,8 +63,8 @@ def cost_to_rank(cost_matrix):
 	convert the number of beans to an optimal cost 
 	"""
 	for i in range(n_rotations):
-		cost_matrix[np.where(cost_matrix == np.max(cost_matrix))] = i # WLOG, max == min
-	return cost_matrix
+		cost_matrix[np.where(cost_matrix == np.max(cost_matrix))] = i - n_rotations
+	return cost_matrix * -1
 
 def pad_matrix(cost):
 	"""
@@ -181,7 +181,8 @@ def plot_students():
 	import seaborn as sns
 
 	sns.lineplot(data = error_df, x = "students", y = "error", errorbar = 'sd').set(title = 'Number of Students vs Error')
-	plt.savefig('./plots/students_error.png')
+	figname = "./plots/students_error_" + penalty + ".png"
+	plt.savefig(figname)
 	plt.clf()
 
 def plot_beans():
@@ -189,7 +190,8 @@ def plot_beans():
 	import seaborn as sns
 
 	sns.lineplot(data = error_df, x = "beans", y = "error", errorbar = 'sd').set(title = 'Number of Beans vs Error')
-	plt.savefig('./plots/beans_error.png')
+	figname = "./plots/beans_error_" + penalty + ".png"
+	plt.savefig(figname)
 	plt.clf()
 
 error_df = pd.DataFrame(columns = ['students', 'beans', 'error'])

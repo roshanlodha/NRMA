@@ -9,7 +9,7 @@ Third-year medical students complete a series of core rotations in internal medi
 
 {tori can you help with the introduction? it would be helpful to pull statistics from online about medical students and specalities and such}
 
-Currently, rotation matching is done psuedo-stochastically, posing a huge time cost. Unequal student preferences in rotation order lead to challenges in finding an optimal assignment for all students, and simply using rank-based preference matching assigns the problem of cost of an unfavorable preference away from the student. Here we propose a student-centered rotation assignment algorithm that finds the optimal student-order pairing. Notably, we allow students to choose the cost of an unfavorable assignment on an individual basis while ensuring an equal amount of students are assigned to each order.
+Currently, rotation matching is done entirely stochastically, posing a huge time cost for both students and faculty. Unequal student preferences in rotation order lead to challenges in finding an optimal assignment for all students, and simply using rank-based preference matching assigns the problem of cost of an unfavorable preference away from the student. Upon random assignment, students currently seek a rotation order of their preference by swapping with other students. Here we propose a student-centered rotation assignment algorithm that finds the optimal student-order pairing. Notably, we allow students to choose the cost of an unfavorable assignment on an individual basis while ensuring an equal amount of students are assigned to each order.
 
 ## Methods
 
@@ -35,18 +35,18 @@ To determine the performance of the rotation assignment, we defined a novel erro
 ### The optimal number of beans is highly variable.
 An optimal number of beans was selected using hyperparameter optimization. For ease of student use, the minimum number of beans was chosen to be `k!`, as it allows for integer divisions between rotation orders. Testing across a wide range of beans revealed that a minimum number of beans minimized error (Figure 1). The cost matrix was sampled randomly and uniformly.
 
-| ![Figure 1](./plots/beans_error.png) |
+| ![Figure 1](./plots/beans_error_beans.png) |
 |:--:| 
-| *Figure 1. Error versus number of beans.* |
+| *Figure 1. Delta error versus number of beans.* |
 
 Analysis of a sample set of real world data showed a skew towards certain rotation orders. Further testing must be done to determine how the number of beans effect the overall error under various sampling distributions. We hypothesize that in real world deployment, increasing the number of beans would decrease the error due to sampling skew and a maximal difference between costs for a given student.
 
 ### The error reduces as the number of students increases. 
 As the number of students increases, the total delta error decreased exponentially (Figure 2). In other words, the error was roughly constant despite increasing the number of students, suggesting better performance as the number of students increases.
 
-| ![Figure 2](./plots/students_error.png) |
+| ![Figure 2](./plots/students_error_beans.png) |
 |:--:| 
-| *Figure 2. Error versus number of students.* |
+| *Figure 2. Delta error versus number of students using a beans-based penalty.* |
 
 ### Deployment and Student Satisfaction
 * real world this year (number of swaps, satisfaction, etc.)
@@ -56,7 +56,6 @@ As the number of students increases, the total delta error decreased exponential
 ## Discussion
 
 ### Key Findings
-
 
 #### Optimality and Completeness
 In our problem, optimality was defined as a rotation order assignment in which no single swap would benefit all students involved in the swap. Completeness was defined as both an equal number of students assigned to each rotation order as well as all students being assigned to exactly 1 rotation order. In the case that the number of students was not 0 in the moduli space `k`, completeness was defined as a difference of no more than 1 student between the most filled and least filled rotation group. Linear sum optimization provides an optimal solution by definition. Completeness was ensured by matrix padding.
@@ -78,7 +77,16 @@ This selection lead to an increased number of students recieving a deeply unfavo
 #### Optimal Student Strategy
 Due to a student-determined cost penalty and the unequal popularity of certain rotations, students could employ game theory to optimize their odds of recieving a certain rotation. For simplicity, consider a scenario with 75 students, where every student wanted rotation order 1 and no students wanted rotation order 4. In this case, only a maximum of 19 students could recieve the top choice rotation. Thus, students had the option of assigning all their beans to rotation order 1 to maximize their chance of getting this rotation. However, if more than 19 students employed this strategy, several would be randomly assigned to a different rotation. Due to the relative unpopularity of rotation order 4, it is likely that most of these students would be assigned to this rotation. Hence, it may benefit students to "take the L" and assign all their beans to their second choice rotation.
 
-Our algorithm allows for easy modification and eliminated of this aspect by having students rank their preferences followed by deterministic assigning a cost penalty to an unfavorable rotation order without the students consultation. In practice, this was not used as to increase input from students. 
+Our algorithm allows for easy modification and eliminated of this aspect by having students rank their preferences followed by deterministic assigning a cost penalty to an unfavorable rotation order without the students consultation. 
+
+| ![Figure 3](./plots/students_error_linear.png) |
+|:--:| 
+| *Figure 3. Delta error versus number of students using a linear penalty.* |
+| ![Figure 4](./plots/students_error_beans.png) |
+|:--:| 
+| *Figure 4. Delta error versus number of beans using a linear penalty.* |
+
+Testing of this method showed that there was decreased error with increase beans (Figure 4), indicating that error is roughly constant under a linear penalty regime. In practice, this was not used in order to increase input from students. 
 
 ### Future Directions
 
