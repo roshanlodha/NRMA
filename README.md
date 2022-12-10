@@ -83,6 +83,7 @@ Our algorithm allows for easy modification and eliminated of this aspect by havi
 | ![Figure 3](./plots/students_error_linear.png) |
 |:--:| 
 | *Figure 3. Delta error versus number of students using a linear penalty.* |
+
 | ![Figure 4](./plots/beans_error_linear.png) |
 |:--:| 
 | *Figure 4. Delta error versus number of beans using a linear penalty.* |
