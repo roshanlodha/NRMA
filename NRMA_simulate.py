@@ -13,7 +13,7 @@ global studentIDs
 global phantom_students
 global error_df
 
-simulate = False
+simulate = True
 penalty = "linear"
 n_beans = 24
 n_student = 7
@@ -27,7 +27,6 @@ option_to_order_dict = {
 	"Option 3": "TBC3 – TBC1 – LAB – TBC2",
 	"Option 4": "TBC1 – TBC3 – TBC2 – LAB",
 }
-order_to_option_dict = {v: k for k, v in option_to_order_dict.items()}
 
 def create_cost_matrix():
 	# add penalty
@@ -112,8 +111,8 @@ def analyze(optimal_order, optimal_order_err, performance=None):
 			delta,
 		)
 		matches = sum(
-			preference_df.drop(columns=["studentID"]).idxmax(axis = 1)
-			== performance["rotation_order"]
+			preference_df.drop(columns=["studentID"]).idxmax(axis=1)
+			== performance["optimal_rotation"]
 		)
 		print(
 			f"Percent of students who recieved their first choice rotation:",
@@ -148,8 +147,8 @@ def update_cost_matrix(row_ind, col_ind):
 	this is a legacy function that is no longer necessary in the current interpretation of the problem
 	"""
 	for i in range(len(col_ind)):
-		for mul in range(np.shape(cost)[0] // n_rotations):
-			cost[i][(n_rotations * mul) + col_ind[i]] = 1000
+		for mul in range(np.shape(cost)[0] // 4):
+			cost[i][(4 * mul) + col_ind[i]] = 1000
 
 
 def main():
@@ -158,10 +157,9 @@ def main():
 	else:
 		# load preference dataframe
 		global preference_df
-		preference_df = pd.read_csv("./data/batch_test.csv")
-		preference_df = preference_df.set_axis(["studentID"] + list(option_to_order_dict.values()), axis = 1, copy = False)
-		preference_df = preference_df.sample(frac = 1).reset_index(
-			drop = True
+		preference_df = pd.read_csv("/work/preferences.csv")
+		preference_df = preference_df.sample(frac=1).reset_index(
+			drop=True
 		)  # shuffle the students so order no longer leads to preference
 		studentIDs = preference_df["studentID"]
 
@@ -175,8 +173,7 @@ def main():
 	performance = None
 	if not simulate:
 		performance = to_string(optimal_order, optimal_order_err)
-		print(performance)
-	
+
 	analyze(optimal_order, optimal_order_err, performance)
 
 def plot_students():
@@ -198,20 +195,15 @@ def plot_beans():
 	plt.clf()
 
 error_df = pd.DataFrame(columns = ['students', 'beans', 'error'])
+for i in range(2 * n_rotations - 1, 301):
+	n_student = i
+	for j in range(10):
+		main()
+plot_students()
 
-if simulate:
-	for i in range(2 * n_rotations - 1, 301):
-		n_student = i
-		for j in range(10):
-			main()
-	plot_students()
-
-	error_df = pd.DataFrame(columns = ['students', 'beans', 'error'])
-	for i in range(factorial(n_rotations, exact=True), 96):
-		n_beans = i
-		for j in range(10):
-			main()
-	plot_beans()
-
-else:
-	main()
+error_df = pd.DataFrame(columns = ['students', 'beans', 'error'])
+for i in range(factorial(n_rotations, exact=True), 96):
+	n_beans = i
+	for j in range(10):
+		main()
+plot_beans()

@@ -1,0 +1,9 @@
+studentID,LAB – TBC2 – TBC3 – TBC1,TBC2 – LAB – TBC1 – TBC3,TBC3 – TBC1 – LAB – TBC2,TBC1 – TBC3 – TBC2 – LAB,optimal_rotation,rotation_order
+abc5,0,0,24,0,Option 3,TBC3 – TBC1 – LAB – TBC2
+abc2,0,0,0,24,Option 4,TBC1 – TBC3 – TBC2 – LAB
+abc1,0,0,12,12,Option 1,LAB – TBC2 – TBC3 – TBC1
+abc7,0,3,6,15,Option 4,TBC1 – TBC3 – TBC2 – LAB
+abc3,0,0,0,24,Option 2,TBC2 – LAB – TBC1 – TBC3
+abc4,0,0,24,0,Option 3,TBC3 – TBC1 – LAB – TBC2
+abc6,0,0,0,24,Option 1,LAB – TBC2 – TBC3 – TBC1
+abc8,0,12,12,0,Option 2,TBC2 – LAB – TBC1 – TBC3
