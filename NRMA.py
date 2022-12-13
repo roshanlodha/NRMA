@@ -14,7 +14,7 @@ global phantom_students
 global error_df
 
 simulate = False
-penalty = "linear"
+penalty = "beans"
 n_beans = 24
 n_student = 7
 n_rotations = 4
@@ -43,7 +43,7 @@ def build_cost_matrix(preference_df):
 	convert preferences to cost and apply optional penalties to skew costs
 	"""
 	# normalize to max number of beans
-	cost_df = preference_df.drop(columns=["studentID"]).astype(float)
+	cost_df = preference_df.drop(columns = ["studentID"]).astype(float)
 	cost_df = cost_df.div(cost_df.sum(axis=1), axis=0) * n_beans
 	cost_df = cost_df.fillna(0)
 
