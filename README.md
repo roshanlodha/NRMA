@@ -5,6 +5,9 @@
 3. <sup>a</sup>Neil Mehta, <sup>a</sup>Craig Nielsen
 
 <sup>a</sup>Cleveland Clinic Lerner College of Medicine 
+## Abstract
+The assignment of clerkship positions to third year medical students is a critical aspect of their development as medical professionals. However, the process can be challenging due to the limited number of available positions and the need to match students with clerkships that align with their interests and career goals. In this paper, we propose the use of the Hungarian algorithm as a solution to this problem. The Hungarian algorithm is a mathematical method that can be used to solve the assignment problem, allowing for the optimal assignment of clerkship positions to students in a way that minimizes the cost. We believe that this approach has the potential to improve the clerkship order assignment process and enhance the learning experiences of medical students.
+
 ## Introduction
 Third-year medical students complete a series of core rotations in internal medicine, surgery, pediatrics, obstetrics, gynecology, neurology, psychiatry, and family medicine. Elective rotations often require a prerequisite core rotation; for example, to enroll in the orthopedics elective, students must first complete the core surgery rotation. Thus, students tend to have a preference for the order in which they are assigned to these rotations.
 

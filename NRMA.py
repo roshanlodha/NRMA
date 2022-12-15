@@ -5,7 +5,7 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 # used for optimal number of beans
 from scipy.special import factorial
-# np.random.seed(44106)
+np.random.seed(44106)
 
 # mutable global variables
 global preference_df
