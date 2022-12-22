@@ -1,14 +1,5 @@
 # Determining Rotation Matching Using Linear Sum Optimization
 
-- [Determining Rotation Matching Using Linear Sum Optimization](#determining-rotation-matching-using-linear-sum-optimization)
-  * [Abstract](#abstract)
-  * [Introduction](#introduction)
-  * [Methods](#methods)
-  * [Results](#results)
-  * [Discussion](#discussion)
-  * [References](#references)
-  * [License](#license)
-
 by **Roshan Lodha**
 
 ## Abstract
@@ -55,6 +46,8 @@ In practice, we sought to assign $n = 77$ students (variable 76-77) to a total o
 | Option 3 | TBC3        | TBC1        | LAB         | TBC2        | TBC3 – TBC1 –LAB – TBC2  |
 | Option 4 | TBC1        | TBC3        | TBC2        | LAB         | TBC1 – TBC3 – TBC2 - LAB |
 
+*Table 1. Rotation order definitions.*
+
 * LAB := Longitudinal Ambulatory Block
 * TBC1 := Internal Medicine, Surgery
 * TBC2 := Pediatrics, Obstetrics and Gynecology, Elective
@@ -91,7 +84,7 @@ As the number of students increases, the total delta error decreased exponential
 In our problem, optimality was defined as a rotation order assignment in which no single swap would benefit all students involved in the swap. Completeness was defined as both an equal number of students assigned to each rotation order as well as all students being assigned to exactly 1 rotation order. In the case that the number of students was not $0$ in the moduli space $k$, completeness was defined as a difference of no more than 1 student between the most filled and least filled rotation group. Linear sum optimization provides an optimal solution by definition. Completeness was ensured by matrix padding.
 
 #### Limitations
-Real world behavior in rotation order selection is poorly modeled by a uniform distribution. Sampling of students preferences reveals high preferences for certain rotation orders. In practice, we found that rotation order 4 > rotation order 3 > rotation order 2 > rotation order 1 (Table 1).
+Real world behavior in rotation order selection is poorly modeled by a uniform distribution. Sampling of students preferences reveals high preferences for certain rotation orders. In practice, we found that rotation order 4 > rotation order 3 > rotation order 2 > rotation order 1 (Table 2).
 
 | Option | Order                    | Beans Assigned | Number First Choice |
 |--------|--------------------------|----------------|---------------------|
@@ -100,7 +93,7 @@ Real world behavior in rotation order selection is poorly modeled by a uniform d
 | 3      | TBC3 - TBC1 - LAB - TBC2 |                |                     |
 | 4      | TBC1 - TBC3 - TBC2 - LAB |                |                     |
 
-*Table 1. Summary statistics from real-world deployment.*
+*Table 2. Summary statistics from real-world deployment.*
 
 This selection lead to an increased number of students recieving a deeply unfavorable rotation order based on their choice of bean assignment. 
 
