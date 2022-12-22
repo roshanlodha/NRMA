@@ -18,6 +18,7 @@ penalty = "beans"
 n_beans = 24
 n_student = 7
 n_rotations = 4
+filename = "./batch_test.csv"
 
 # definitions and converters
 rotationdict = {0: "Option 1", 1: "Option 2", 2: "Option 3", 3: "Option 4"}
@@ -102,7 +103,7 @@ def rotation_calc(cost):
 	return rotations, err
 
 
-def analyze(optimal_order, optimal_order_err, performance=None):
+def analyze(optimal_order, optimal_order_err, performance = None):
 	global error_df
 	delta = optimal_order_err / n_student / n_beans
 	
@@ -149,7 +150,7 @@ def update_cost_matrix(row_ind, col_ind):
 def main():
 	# load preference dataframe
 	global preference_df
-	preference_df = pd.read_csv("./data/batch_test.csv")
+	preference_df = pd.read_csv(filename)
 	preference_df = preference_df.set_axis(["studentID"] + list(option_to_order_dict.values()), axis = 1, copy = False)
 	preference_df = preference_df.sample(frac = 1).reset_index(
 		drop = True
@@ -170,5 +171,4 @@ def main():
 
 error_df = pd.DataFrame(columns = ['students', 'beans', 'error'])
 
-else:
-	main()
+main()
