@@ -136,7 +136,7 @@ def to_string(optimal_order, optimal_order_err):
 		option_to_order_dict
 	)
 
-	performance.to_csv("rotations.csv", index=False)
+	performance.to_csv("./out/rotations.csv", index = False)
 
 	return performance
 

@@ -106,30 +106,24 @@ def analyze(optimal_order, optimal_order_err, performance=None):
 	global error_df
 	delta = optimal_order_err / n_student / n_beans
 	
-	if not simulate:
-		print(
-			f"Average error of assignment for first rotation:",
-			delta,
-		)
-		matches = sum(
-			preference_df.drop(columns=["studentID"]).idxmax(axis = 1)
-			== performance["rotation_order"]
-		)
-		print(
-			f"Percent of students who recieved their first choice rotation:",
-			matches / n_student,
-		)
-	else:
-		temp_df = pd.DataFrame(data = [[n_student, n_beans, delta]], 
-		# temp_df = pd.DataFrame(data = [[n_student, n_beans, optimal_order_err]], 
-			columns = ['students', 'beans', 'error'])
-		error_df = pd.concat([error_df, temp_df])
+	print(
+		f"Average error of assignment for first rotation:",
+		delta,
+	)
+	matches = sum(
+		preference_df.drop(columns=["studentID"]).idxmax(axis = 1)
+		== performance["rotation_order"]
+	)
+	print(
+		f"Percent of students who recieved their first choice rotation:",
+		matches / n_student,
+	)
 
 
 def to_string(optimal_order, optimal_order_err):
 	rotations = pd.DataFrame({"optimal_rotation": optimal_order})
 	rotations.drop(
-		rotations.tail(phantom_students).index, inplace=True
+		rotations.tail(phantom_students).index, inplace = True
 	)  # remove the phantom students
 
 	performance = pd.concat([preference_df, rotations], axis=1)
@@ -137,7 +131,7 @@ def to_string(optimal_order, optimal_order_err):
 		option_to_order_dict
 	)
 
-	performance.to_csv("rotations.csv", index=False)
+	performance.to_csv("./out/rotations.csv", index = False)
 
 	return performance
 
@@ -153,65 +147,28 @@ def update_cost_matrix(row_ind, col_ind):
 
 
 def main():
-	if simulate:
-		cost = create_cost_matrix()		
-	else:
-		# load preference dataframe
-		global preference_df
-		preference_df = pd.read_csv("./data/batch_test.csv")
-		preference_df = preference_df.set_axis(["studentID"] + list(option_to_order_dict.values()), axis = 1, copy = False)
-		preference_df = preference_df.sample(frac = 1).reset_index(
-			drop = True
-		)  # shuffle the students so order no longer leads to preference
-		studentIDs = preference_df["studentID"]
+	# load preference dataframe
+	global preference_df
+	preference_df = pd.read_csv("./data/batch_test.csv")
+	preference_df = preference_df.set_axis(["studentID"] + list(option_to_order_dict.values()), axis = 1, copy = False)
+	preference_df = preference_df.sample(frac = 1).reset_index(
+		drop = True
+	)  # shuffle the students so order no longer leads to preference
+	studentIDs = preference_df["studentID"]
 
-		global n_student
-		n_student = len(studentIDs)
+	global n_student
+	n_student = len(studentIDs)
 
-		cost = build_cost_matrix(preference_df)
+	cost = build_cost_matrix(preference_df)
 
 	optimal_order, optimal_order_err = rotation_calc(cost)
 
-	performance = None
-	if not simulate:
-		performance = to_string(optimal_order, optimal_order_err)
-		print(performance)
+	performance = to_string(optimal_order, optimal_order_err)
+	print(performance)
 	
 	analyze(optimal_order, optimal_order_err, performance)
 
-def plot_students():
-	import matplotlib.pyplot as plt
-	import seaborn as sns
-
-	sns.lineplot(data = error_df, x = "students", y = "error", errorbar = 'sd').set(title = 'Number of Students vs Error')
-	figname = "./plots/students_error_" + penalty + ".png"
-	plt.savefig(figname)
-	plt.clf()
-
-def plot_beans():
-	import matplotlib.pyplot as plt
-	import seaborn as sns
-
-	sns.lineplot(data = error_df, x = "beans", y = "error", errorbar = 'sd').set(title = 'Number of Beans vs Error')
-	figname = "./plots/beans_error_" + penalty + ".png"
-	plt.savefig(figname)
-	plt.clf()
-
 error_df = pd.DataFrame(columns = ['students', 'beans', 'error'])
-
-if simulate:
-	for i in range(2 * n_rotations - 1, 301):
-		n_student = i
-		for j in range(10):
-			main()
-	plot_students()
-
-	error_df = pd.DataFrame(columns = ['students', 'beans', 'error'])
-	for i in range(factorial(n_rotations, exact=True), 96):
-		n_beans = i
-		for j in range(10):
-			main()
-	plot_beans()
 
 else:
 	main()
