@@ -26,7 +26,7 @@ Students were given `b` "beans" and were asked to divide assign these beans howe
 ### Algorithm Design
 
 #### Matrix Padding
-Linear sum optimization requires a wide or square matrix. Thus, we add phantom students with no rotation order preference until the number of rows is 0 in moduli space `k`. Subsequently, we tile the matrix to a width of `⌈n / k⌉` resulting in a `⌈n / k⌉ * k` by `⌈n / k⌉ * k` square matrix. The row order was randomly shuffled to ensure that submission time was not a factor in determining rotation order preference. 
+Linear sum optimization requires a wide or square matrix. Thus, we add phantom students with no rotation order preference until the number of rows is 0 in moduli space `k`. Subsequently, we tile the matrix to a width of $\ceil{\frac{n}{k}}$ `⌈n / k⌉` resulting in a `⌈n / k⌉ * k` by `⌈n / k⌉ * k` square matrix. The row order was randomly shuffled to ensure that submission time was not a factor in determining rotation order preference. 
 
 #### Linear Sum Optimization
 The optimal rotation order was calculated by calculating the linear sum optimization on the padded, square cost matrix in Python (SciPy: 1.9.3, Python 3.9.6).
@@ -107,8 +107,10 @@ Often, students live with another medical student partner. In order to encourage
 ## References
 1.  Munkres J. Algorithms for the Assignment and Transportation Problems. Journal of the Society for Industrial and Applied Mathematics 1957;5(1):32–8. 
 2.  Crouse DF. On implementing 2D rectangular assignment algorithms. IEEE Transactions on Aerospace and Electronic Systems 2016;52(4):1679–96. 
-3.  Kuhn HW. The Hungarian method for the assignment problem. Naval Research Logistics Quarterly 1955;2(1–2):83–97. 
-4.  Kuhn HW. Variants of the hungarian method for assignment problems. Naval Research Logistics Quarterly 1956;3(4):253–8. 
+3.  MacLean MT, Lysikowski JR, Rege RV, Sendelbach DM, Mihalic AP. Optimizing Medical Student Clerkship Schedules Using a Novel Application of the Hungarian Algorithm. Academic Medicine 2021;96(6):864–8. 
+4.  Kuhn HW. The Hungarian method for the assignment problem. Naval Research Logistics Quarterly 1955;2(1–2):83–97. 
+5.  Kuhn HW. Variants of the hungarian method for assignment problems. Naval Research Logistics Quarterly 1956;3(4):253–8. 
+
 
 ## License
 Shield: [![CC BY-SA 4.0][cc-by-sa-shield]][cc-by-sa]
