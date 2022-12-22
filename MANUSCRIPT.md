@@ -1,39 +1,16 @@
 # Determining Rotation Matching Using Linear Sum Optimization
 
 - [Determining Rotation Matching Using Linear Sum Optimization](#determining-rotation-matching-using-linear-sum-optimization)
-  * [Authors](#authors)
   * [Abstract](#abstract)
   * [Introduction](#introduction)
   * [Methods](#methods)
-    + [Problem Formulation and Encoding](#problem-formulation-and-encoding)
-      - [Determining Costs](#determining-costs)
-        * [Linear Cost Alternative](#linear-cost-alternative)
-    + [Algorithm Design](#algorithm-design)
-      - [Matrix Padding](#matrix-padding)
-      - [Linear Sum Optimization](#linear-sum-optimization)
-    + [Error Testing](#error-testing)
   * [Results](#results)
-    + [The optimal number of beans is highly variable.](#the-optimal-number-of-beans-is-highly-variable)
-    + [The error reduces as the number of students increases.](#the-error-reduces-as-the-number-of-students-increases)
-    + [Deployment and Student Satisfaction](#deployment-and-student-satisfaction)
   * [Discussion](#discussion)
-    + [Key Findings](#key-findings)
-      - [Optimality and Completeness](#optimality-and-completeness)
-      - [Limitations](#limitations)
-      - [Optimal Student Strategy](#optimal-student-strategy)
-    + [Future Directions](#future-directions)
-      - [Skewed Costs](#skewed-costs)
-      - [Adding Distance Penalties](#adding-distance-penalties)
-      - [Adding Couples Matching](#adding-couples-matching)
   * [References](#references)
   * [License](#license)
 
-## Authors
-1. <sup>a</sup>[Roshan Lodha](https://roshanlodha.github.io)
-2. <sup>a</sup>[Tori Rogness](), <sup>a</sup>[Alan Shen]()
-3. <sup>a</sup>Neil Mehta, <sup>a</sup>Craig Nielsen
+by **Roshan Lodha**
 
-<sup>a</sup>Cleveland Clinic Lerner College of Medicine 
 ## Abstract
 The assignment of clerkship positions to third year medical students is a critical aspect of their development as medical professionals. However, the process can be challenging due to the limited number of available positions and the need to match students with clerkships that align with their interests and career goals. In this paper, we propose the use of the Hungarian algorithm as a solution to this problem. The Hungarian algorithm is a mathematical method that can be used to solve the assignment problem, allowing for the optimal assignment of clerkship positions to students in a way that minimizes the cost. We believe that this approach has the potential to improve the clerkship order assignment process and enhance the learning experiences of medical students.
 
@@ -47,7 +24,7 @@ Currently, rotation matching is done entirely stochastically, posing a huge time
 ## Methods
 
 ### Problem Formulation and Encoding
-We reframed the problem of optimal rotation order as an minimum-cost assignment problem. Each student has the option of $k$ rotation orders which they assigned a cost to. These costs were used to formulate an $n x k$ tall matrix. Each row was a student's preference assignment for the $k$ rotations.
+We reframed the problem of optimal rotation order as an minimum-cost assignment problem. Each student has the option of $k$ rotation orders which they assigned a cost to. These costs were used to formulate an $n × k$ tall matrix. Each row was a student's preference assignment for the $k$ rotations.
 
 #### Determining Costs 
 Students were given $b$ "beans" and were asked to divide assign these beans however they would like to the rotation orders. Null submissions were assigned $\frac{b}{k}$ beans to each rotation. All responses were scaled such that the sum of beans was exactly $b$. Each rotation order's assigned beans was then converted to a cost by subtracting it from $b$. For example, if a rotation was assigned $c$ beans, its associated cost would be $b - c$. Hyperparameter optimization was used to determine the optimal number of beans for a given application.
@@ -58,7 +35,7 @@ In order to allow for broader generalizability, our algorithm allows for a ranke
 ### Algorithm Design
 
 #### Matrix Padding
-Linear sum optimization requires a wide or square matrix. Thus, we add phantom students with no rotation order preference until the number of rows is $0$ in moduli space $k$. Subsequently, we tile the matrix to a width of $⌈\frac{n}{k}⌉$ resulting in a $⌈\frac{n}{k}⌉ x ⌈\frac{n}{k}⌉$ square matrix. The row order was randomly shuffled to ensure that submission time was not a factor in determining rotation order preference. 
+Linear sum optimization requires a wide or square matrix. Thus, we add phantom students with no rotation order preference until the number of rows is $0$ in moduli space $k$. Subsequently, we tile the matrix to a width of $⌈\frac{n}{k}⌉$ resulting in a $⌈\frac{n}{k}⌉ × ⌈\frac{n}{k}⌉$ square matrix. The row order was randomly shuffled to ensure that submission time was not a factor in determining rotation order preference. 
 
 #### Linear Sum Optimization
 The optimal rotation order was calculated by calculating the linear sum optimization on the padded, square cost matrix in Python (SciPy: 1.9.3, Python 3.9.6).
@@ -175,3 +152,10 @@ This work is licensed under a
 [cc-by-sa]: http://creativecommons.org/licenses/by-sa/4.0/
 [cc-by-sa-image]: https://licensebuttons.net/l/by-sa/4.0/88x31.png
 [cc-by-sa-shield]: https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg
+
+### Authors
+1. <sup>a</sup>[Roshan Lodha](https://roshanlodha.github.io)
+2. <sup>a</sup>[Tori Rogness](), <sup>a</sup>[Alan Shen]()
+3. <sup>a</sup>Neil Mehta, <sup>a</sup>Craig Nielsen
+
+<sup>a</sup>Cleveland Clinic Lerner College of Medicine 
