@@ -1,4 +1,33 @@
 # Determining Rotation Matching Using Linear Sum Optimization
+
+- [Determining Rotation Matching Using Linear Sum Optimization](#determining-rotation-matching-using-linear-sum-optimization)
+  * [Authors](#authors)
+  * [Abstract](#abstract)
+  * [Introduction](#introduction)
+  * [Methods](#methods)
+    + [Problem Formulation and Encoding](#problem-formulation-and-encoding)
+      - [Determining Costs](#determining-costs)
+        * [Linear Cost Alternative](#linear-cost-alternative)
+    + [Algorithm Design](#algorithm-design)
+      - [Matrix Padding](#matrix-padding)
+      - [Linear Sum Optimization](#linear-sum-optimization)
+    + [Error Testing](#error-testing)
+  * [Results](#results)
+    + [The optimal number of beans is highly variable.](#the-optimal-number-of-beans-is-highly-variable)
+    + [The error reduces as the number of students increases.](#the-error-reduces-as-the-number-of-students-increases)
+    + [Deployment and Student Satisfaction](#deployment-and-student-satisfaction)
+  * [Discussion](#discussion)
+    + [Key Findings](#key-findings)
+      - [Optimality and Completeness](#optimality-and-completeness)
+      - [Limitations](#limitations)
+      - [Optimal Student Strategy](#optimal-student-strategy)
+    + [Future Directions](#future-directions)
+      - [Skewed Costs](#skewed-costs)
+      - [Adding Distance Penalties](#adding-distance-penalties)
+      - [Adding Couples Matching](#adding-couples-matching)
+  * [References](#references)
+  * [License](#license)
+
 ## Authors
 1. <sup>a</sup>[Roshan Lodha](https://roshanlodha.github.io)
 2. <sup>a</sup>[Tori Rogness](), <sup>a</sup>[Alan Shen]()
@@ -18,32 +47,52 @@ Currently, rotation matching is done entirely stochastically, posing a huge time
 ## Methods
 
 ### Problem Formulation and Encoding
-We reframed the problem of optimal rotation order as an minimum-cost assignment problem. Each student has the option of `k` rotation orders {add a table 1 with the order, abreviation, and the full meaning} which they assigned a cost to. These costs were used to formulate an `n` x `k` tall matrix, with `n` students each with `k = 4` rotations.
+We reframed the problem of optimal rotation order as an minimum-cost assignment problem. Each student has the option of $k$ rotation orders which they assigned a cost to. These costs were used to formulate an $n x k$ tall matrix. Each row was a student's preference assignment for the $k$ rotations.
 
 #### Determining Costs 
-Students were given `b` "beans" and were asked to divide assign these beans however they would like to the rotation orders. Null submissions were assigned `b / k` beans to each rotation. All responses were scaled such that the sum of beans was exactly `b`. Each rotation order's assigned beans was then converted to a cost by subtracting it from `b`. For example, if a rotation was assigned `c` beans, its associated cost would be `b - c`. Generally, the optimal number of beans is 0 in moduli space `b`. Hyperparameter optimization is used to determine the optimal number of beans for a given application.
+Students were given $b$ "beans" and were asked to divide assign these beans however they would like to the rotation orders. Null submissions were assigned $\frac{b}{k}$ beans to each rotation. All responses were scaled such that the sum of beans was exactly $b$. Each rotation order's assigned beans was then converted to a cost by subtracting it from $b$. For example, if a rotation was assigned $c$ beans, its associated cost would be $b - c$. Hyperparameter optimization was used to determine the optimal number of beans for a given application.
+
+##### Linear Cost Alternative
+In order to allow for broader generalizability, our algorithm allows for a ranked-preference based assignment optimizer coupled to a beans to rank conversion tool. In practice, this tool was not used (see discussion for further details). 
 
 ### Algorithm Design
 
 #### Matrix Padding
-Linear sum optimization requires a wide or square matrix. Thus, we add phantom students with no rotation order preference until the number of rows is 0 in moduli space `k`. Subsequently, we tile the matrix to a width of $⌈\frac{n}{k}⌉$ `⌈n / k⌉` resulting in a `⌈n / k⌉ * k` by `⌈n / k⌉ * k` square matrix. The row order was randomly shuffled to ensure that submission time was not a factor in determining rotation order preference. 
+Linear sum optimization requires a wide or square matrix. Thus, we add phantom students with no rotation order preference until the number of rows is $0$ in moduli space $k$. Subsequently, we tile the matrix to a width of $⌈\frac{n}{k}⌉$ resulting in a $⌈\frac{n}{k}⌉ x ⌈\frac{n}{k}⌉$ square matrix. The row order was randomly shuffled to ensure that submission time was not a factor in determining rotation order preference. 
 
 #### Linear Sum Optimization
 The optimal rotation order was calculated by calculating the linear sum optimization on the padded, square cost matrix in Python (SciPy: 1.9.3, Python 3.9.6).
 
 ### Error Testing
-To determine the performance of the rotation assignment, we defined a novel error metric, δ, as the `total_cost / n / b, {δ ∈ R | [0, 1]}`. 
+To determine the performance of the rotation assignment, we defined a novel error metric, $δ$, as the $\frac{total_cost}{\frac{n}{b}}$. $δ$ is a real number in the range $[0,1]$, with a lower number signifying less deviation from the optimal result. A $δ$ of $0$ occurs when exactly $\frac{n}{k}$ assign $b$ beans to a each preference. 
 
 ## Results
 
+### Definition of Parameters
+In practice, we sought to assign $n = 77$ students (variable 76-77) to a total of $k = 4$ possible rotation orders. 
+
+|          | Clerkship 1 | Clerkship 2 | Clerkship 3 | Clerkship 4 | Encoding                 |
+|----------|-------------|-------------|-------------|-------------|--------------------------|
+| Option 1 | LAB         | TBC2        | TBC3        | TBC1        | LAB – TBC2 – TBC3 – TBC1 |
+| Option 2 | TBC2        | LAB         | TBC1        | TBC3        | TBC2 – LAB – TBC1 – TBC3 |
+| Option 3 | TBC3        | TBC1        | LAB         | TBC2        | TBC3 – TBC1 –LAB – TBC2  |
+| Option 4 | TBC1        | TBC3        | TBC2        | LAB         | TBC1 – TBC3 – TBC2 - LAB |
+
+* LAB := Longitudinal Ambulatory Block
+* TBC1 := Internal Medicine, Surgery
+* TBC2 := Pediatrics, Obstetrics and Gynecology, Elective
+* TBC3 := Neurology, Psychiatry, Elective
+
+We employed a maximum number of $b = 4!$ beans per student to allow for integer divisions of beans into preferences.
+
 ### The optimal number of beans is highly variable.
-An optimal number of beans was selected using hyperparameter optimization. For ease of student use, the minimum number of beans was chosen to be `k!`, as it allows for integer divisions between rotation orders. Testing across a wide range of beans revealed that a minimum number of beans minimized error (Figure 1). The cost matrix was sampled randomly and uniformly.
+An optimal number of beans was selected using hyperparameter optimization. For ease of student use, the minimum number of beans was chosen to be $k!$, as it allows for integer divisions between rotation orders. Testing across a wide range of beans revealed that a minimum number of beans minimized error (Figure 1). The cost matrix was sampled randomly and uniformly.
 
 | ![Figure 1](./plots/beans_error_beans.png) |
 |:--:| 
 | *Figure 1. Delta error versus number of beans.* |
 
-Analysis of a sample set of real world data showed a skew towards certain rotation orders. Further testing must be done to determine how the number of beans effect the overall error under various sampling distributions. We hypothesize that in real world deployment, increasing the number of beans would decrease the error due to sampling skew and a maximal difference between costs for a given student.
+Analysis of a sample set of real world data showed a skew towards certain rotation orders. Further testing must be done to determine how the number of beans effect the overall error under various sampling distributions. We hypothesize that in real world deployment, increasing the number of beans would decrease the error due to sampling skew and a maximal difference between costs for a given student. In practice, we hypothesizes that the optimal number of total beans for each student is $0$ in moduli space $b$ due to ease of division for students; $b!$ is a good choice. 
 
 ### The error reduces as the number of students increases. 
 As the number of students increases, the total delta error decreased exponentially (Figure 2). In other words, the error was roughly constant despite increasing the number of students, suggesting better performance as the number of students increases.
@@ -62,7 +111,7 @@ As the number of students increases, the total delta error decreased exponential
 ### Key Findings
 
 #### Optimality and Completeness
-In our problem, optimality was defined as a rotation order assignment in which no single swap would benefit all students involved in the swap. Completeness was defined as both an equal number of students assigned to each rotation order as well as all students being assigned to exactly 1 rotation order. In the case that the number of students was not 0 in the moduli space `k`, completeness was defined as a difference of no more than 1 student between the most filled and least filled rotation group. Linear sum optimization provides an optimal solution by definition. Completeness was ensured by matrix padding.
+In our problem, optimality was defined as a rotation order assignment in which no single swap would benefit all students involved in the swap. Completeness was defined as both an equal number of students assigned to each rotation order as well as all students being assigned to exactly 1 rotation order. In the case that the number of students was not $0$ in the moduli space $k$, completeness was defined as a difference of no more than 1 student between the most filled and least filled rotation group. Linear sum optimization provides an optimal solution by definition. Completeness was ensured by matrix padding.
 
 #### Limitations
 Real world behavior in rotation order selection is poorly modeled by a uniform distribution. Sampling of students preferences reveals high preferences for certain rotation orders. In practice, we found that rotation order 4 > rotation order 3 > rotation order 2 > rotation order 1 (Table 1).
@@ -91,7 +140,7 @@ Our algorithm allows for easy modification and eliminated of this aspect by havi
 |:--:| 
 | *Figure 4. Delta error versus number of beans using a linear penalty.* |
 
-Testing of this method showed that there was decreased error with increase beans (Figure 4), indicating that error is roughly constant under a linear penalty regime. In practice, this was not used in order to increase input from students. 
+Testing of this method showed that there was decreased error with increase beans (Figure 4), indicating that error is roughly constant under a linear penalty regime. In practice, this was not used in order to allow finer control in students' choices. 
 
 ### Future Directions
 
@@ -103,6 +152,9 @@ Within each rotation, students can be placed at several sites. Suburban hospital
 
 #### Adding Couples Matching
 Often, students live with another medical student partner. In order to encourage carpooling, the cost function can be further modified to increase the odds that two students are placed in the same rotation.
+
+#### Unequal Rotation Sizes
+While our usage mandated an equal number of students in each rotation, updating the algorithm for unequal distributions is as simple as modifying the tiling function to include more repetitions of options that can accomodate a higher number of students. 
 
 ## References
 1.  Munkres J. Algorithms for the Assignment and Transportation Problems. Journal of the Society for Industrial and Applied Mathematics 1957;5(1):32–8. 
@@ -116,7 +168,7 @@ Often, students live with another medical student partner. In order to encourage
 Shield: [![CC BY-SA 4.0][cc-by-sa-shield]][cc-by-sa]
 
 This work is licensed under a
-[Creative Commons Attribution-ShareAlike 4.0 International License][cc-by-sa].
+[Creative Commons Attribution-ShareAlike 4.$0$ International License][cc-by-sa].
 
 [![CC BY-SA 4.0][cc-by-sa-image]][cc-by-sa]
 
