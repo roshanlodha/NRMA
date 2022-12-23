@@ -18,7 +18,7 @@ penalty = "beans"
 n_beans = 24
 n_student = 7
 n_rotations = 4
-filename = "./batch_test.csv"
+filename = "./data/batch_test.csv"
 
 # definitions and converters
 rotationdict = {0: "Option 1", 1: "Option 2", 2: "Option 3", 3: "Option 4"}
