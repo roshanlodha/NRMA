@@ -76,7 +76,7 @@ def pad_matrix(cost):
     phantom_students = 0
 
     while np.shape(cost)[0] % n_rotations != 0:
-        cost = np.vstack([cost, [n_beans, n_beans, n_beans, n_beans]])
+        cost = np.vstack([cost, np.full(n_rotations, n_beans)])
         phantom_students += 1
 
     cost = np.tile(cost, (1, np.shape(cost)[0] // n_rotations))
