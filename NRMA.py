@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import sys
 
 # using optimized elinear sums problem solver
 from scipy.optimize import linear_sum_assignment
@@ -18,7 +19,7 @@ penalty = "beans"
 n_beans = 24
 n_student = 7
 n_rotations = 4
-filename = "./data/batch_test.csv"
+filename = sys.argv[1]
 
 # definitions and converters
 rotationdict = {0: "Option 1", 1: "Option 2", 2: "Option 3", 3: "Option 4"}
@@ -150,11 +151,15 @@ def update_cost_matrix(row_ind, col_ind):
 def main():
 	# load preference dataframe
 	global preference_df
-	preference_df = pd.read_csv(filename)
+	preference_df = pd.read_csv(filename)  # given at sysargs
+
+	# cleanup of dataframe columns
+	preference_df = preference_df.drop(preference_df.columns[[1, 2]], axis = 1)
 	preference_df = preference_df.set_axis(["studentID"] + list(option_to_order_dict.values()), axis = 1, copy = False)
 	preference_df = preference_df.sample(frac = 1).reset_index(
 		drop = True
 	)  # shuffle the students so order no longer leads to preference
+	
 	studentIDs = preference_df["studentID"]
 
 	global n_student
