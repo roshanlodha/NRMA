@@ -8,8 +8,8 @@ In order to use this algorithm, you will need to have the following packages ins
 
 * Python3 
 * Pandas (for data manipulation and analysis)
-* Scipy (for optimization functions)
-* Numpy (for numerical computing)
+* SciPy (for optimization functions)
+* NumPy (for numerical computing)
 
 You can install these packages by running the following command in the downloaded path:
 ```
@@ -18,12 +18,12 @@ pip3 install requirements.txt
 
 ## Usage
 
-To use the algorithm, the path of the preference matrix should be specified as the `filename` variable in `NRMA.py`. The preference matrix should be a csv file with rows representing the students and columns representing the rotation preferences. The values in the matrix should represent the student's preference for the rotation, with higher values indicating a stronger preference.
+To use the algorithm, the path of the preference matrix should be specified as the `filename` in the command line when running `NRMA.py` (see example below). The preference matrix should be a csv file with rows representing the students and columns representing the rotation preferences. The values in the matrix should represent the student's preference for the rotation, with higher values indicating a stronger preference.
 
 The optimal rotation order assignment can be found by running the following command:
 
 ```
-python3 NRMA.py
+python3 NRMA.py batch_test.csv
 ```
 
 ### Beans vs Linear Mode
