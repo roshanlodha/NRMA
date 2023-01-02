@@ -13,7 +13,7 @@ In order to use this algorithm, you will need to have the following packages ins
 
 You can install these packages by running the following command in the downloaded path:
 ```
-pip3 install requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ## Usage
