@@ -35,16 +35,6 @@ option_to_order_dict = {
 order_to_option_dict = {v: k for k, v in option_to_order_dict.items()}
 
 
-def create_cost_matrix():
-    # add penalty
-    cost_matrix = np.random.randint(n_beans // n_rotations, size=(75, n_rotations))
-    if penalty == "beans":
-        pass
-    elif penalty == "linear":
-        cost_matrix = np.random.randint(n_rotations, size=(75, n_rotations))
-    return pad_matrix(cost_matrix)
-
-
 def build_cost_matrix(preference_df):
     """
     convert preferences to cost and apply optional penalties to skew costs
@@ -69,7 +59,7 @@ def build_cost_matrix(preference_df):
 
 def cost_to_rank(cost_matrix):
     """
-    convert the number of beans to an optimal cost
+    convert the bean ranking to a preferences ranking (linear penalty)
     """
     for i in range(n_rotations):
         cost_matrix[np.where(cost_matrix == np.max(cost_matrix))] = i - n_rotations
@@ -78,9 +68,9 @@ def cost_to_rank(cost_matrix):
 
 def pad_matrix(cost):
     """
-    pad matrix to multiples of 4
-    add one ghost row and ceil(75/4) - 1 duplicate columns
-    add duplicate columns to ensure square optimization problem
+    1. pad matrix to multiples of n_rotations
+    2. add one ghost row and ceil(n_students/n_rotations) - 1 duplicate columns
+    3. add duplicate columns to ensure square optimization problem
     """
     global phantom_students
     phantom_students = 0
@@ -95,18 +85,15 @@ def pad_matrix(cost):
 
 def rotation_calc(cost):
     """
-    run linear_sum_assignment on cost matrix
-    optimal results are stored in col_index
-    the "cost", or error in this case is the total deviation from everyone getting their first preference
+    Runs linear_sum_assignment on cost matrix and stores the optimal results in col_ind.
     """
     row_ind, col_ind = linear_sum_assignment(cost)
-    err = cost[row_ind, col_ind].sum()
+    err = cost[row_ind, col_ind].sum() # cumulative distance for each bean preference
 
     rotation_index = (
         col_ind % n_rotations
     )  # re-wraps the indicies to their human readable form
     rotations = [rotationdict.get(index) for index in rotation_index]
-    # update_cost_matrix(row_ind, rotation_index)
 
     err = err - phantom_students * n_beans  # correction factor for phantom students
 
