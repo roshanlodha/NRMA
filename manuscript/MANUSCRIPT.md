@@ -32,7 +32,7 @@ Linear sum optimization requires a wide or square matrix. Thus, we add phantom s
 The optimal rotation order was calculated by calculating the linear sum optimization on the padded, square cost matrix in Python (SciPy: 1.9.3, Python 3.9.6).
 
 ### Error Testing
-To determine the performance of the rotation assignment, we defined a novel error metric, $δ$, as the $\frac{total_cost}{\frac{n}{b}}$. $δ$ is a real number in the range $[0,1]$, with a lower number signifying less deviation from the optimal result. A $δ$ of $0$ occurs when exactly $\frac{n}{k}$ assign $b$ beans to a each preference. 
+To determine the performance of the rotation assignment, we defined a novel error metric, $δ$, as $\frac{t}{\frac{n}{b}}$, where $t$ represents the total cost. $δ$ is a real number in the range $[0,1]$, with a lower number signifying less deviation from the optimal result. A $δ$ of $0$ occurs when exactly $\frac{n}{k}$ assign $b$ beans to a each preference. 
 
 ## Results
 
