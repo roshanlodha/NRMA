@@ -18,6 +18,7 @@ global error_df
 
 # immutable global variables
 simulate = False
+anon = True
 penalty = "beans"
 n_beans = 24
 n_student = 7
@@ -129,7 +130,7 @@ def to_string(optimal_order, optimal_order_err):
         option_to_order_dict
     )
 
-    performance.to_csv("./out/rotations.csv", index=False)
+    performance.sort_values(by = ['studentID']).to_csv("./out/rotations.csv", index=False)
 
     return performance
 
@@ -147,10 +148,12 @@ def update_cost_matrix(row_ind, col_ind):
 def main():
     # load preference dataframe
     global preference_df
-    preference_df = pd.read_csv(filename)  # given at sysargs
+    preference_df = pd.read_csv(filename, encoding = 'cp1252')  # given at sysargs
 
     # cleanup of dataframe columns
-    preference_df = preference_df.drop(preference_df.columns[[1, 2]], axis=1)
+    if not anon:
+        preference_df = preference_df.drop(preference_df.columns[[1, 2]], axis=1)
+    
     preference_df = preference_df.set_axis(
         ["studentID"] + list(option_to_order_dict.values()), axis=1, copy=False
     )
