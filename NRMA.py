@@ -145,7 +145,7 @@ def update_cost_matrix(row_ind, col_ind):
             cost[i][(n_rotations * mul) + col_ind[i]] = 1000
 
 
-def main():
+def main():    
     # load preference dataframe
     global preference_df
     preference_df = pd.read_csv(filename, encoding = 'cp1252')  # given at sysargs
