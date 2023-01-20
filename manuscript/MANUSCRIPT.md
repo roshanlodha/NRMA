@@ -114,6 +114,9 @@ Testing of this method showed that there was decreased error with increase beans
 
 ### Future Directions
 
+#### Incorporating Survey Results
+Bean assignment data highlighted the relative unpopularity of Option 1, with only a single student ranking it as their first choice rotation order and only 4 students assigning beans to this rotation entirely. Discussions with students suggested that splitting up the internal medicine and surgery rotations could lead to a more equitable districutions of beans. This is something we hope to implement in the future. 
+
 #### Skewed Costs
 Applying a weight to the cost matrix can skew the results to avoid assigning students to their last-choice preference. For example, adding an exponential penalty would more significantly penalize rotation orders with fewer beans, skewing the optimal result away from those set of solutions. Our algorithm allows for easy modification of a cost matrix. Hyperparameter optimization should be used to determine the best cost penality function for a given application. 
 
