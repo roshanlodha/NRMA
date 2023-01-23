@@ -1,0 +1,69 @@
+---
+title: "Analysis of NRMA"
+author: "Roshan Lodha"
+date: "2023-01-23"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = TRUE) # wrap to 60 chr width
+knitr::opts_chunk$set(warning = FALSE, # turn off warnings
+                      results = 'hide', # hide console output
+                      message = FALSE) 
+knitr::opts_chunk$set(fig.width = 10, fig.height = 10) # set figure height and width
+```
+
+# Introduction
+
+Talk about the manuscript here blah blah blah. 
+
+```{r load-packages-and-data}
+pkgs <- c("tidyverse", "ggprism", "MASS", "reshape2", "reshape")
+invisible(lapply(pkgs, function (x) suppressMessages(library(x, character.only = T))))
+
+responses <- read_csv("./responses_raw.csv")
+colnames(responses) <- c("program", 
+                         "specialty_of_interest", 
+                         "option_one", "option_two", 
+                         "option_three", 
+                         "option_four")
+responses$program <- as.factor(responses$program)
+responses$specialty_of_interest <- as.factor(responses$specialty_of_interest)
+responses
+```
+
+# Response Analysis
+## Specialty of Interest Analysis
+
+```{r specialty}
+responses %>% 
+  group_by(specialty_of_interest, program) %>% 
+  summarise(count = n()) %>% 
+  ggplot(aes(x = reorder(specialty_of_interest, (-count)), y = count, fill = program)) + 
+  geom_bar(position="stack", stat = 'identity') +
+  theme_prism() + 
+  labs(y= "Students Interested", x = "Specialty", title = "Most Popular Specialties") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Beans Assigned to Each Rotation
+```{r beans}
+responses %>% 
+  dplyr::select(-c("program")) %>%
+  group_by(specialty_of_interest) %>% 
+  summarise(option_one = sum(option_one),
+            option_two = sum(option_two), 
+            option_three = sum(option_three), 
+            option_four = sum(option_four),
+            .groups = 'drop') %>%
+  as.data.frame() %>%
+  melt(id = c("specialty_of_interest")) %>%
+  ggplot(aes(x = reorder(specialty_of_interest, (-value)), y = value, fill = variable)) + 
+  geom_bar(position="stack", stat = 'identity') +
+  theme_prism() + 
+  labs(y= "Beans Assigned", x = "Specialty", title = "Beans Assigned to Rotation by Specialties") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```

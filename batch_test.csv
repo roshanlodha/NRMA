@@ -1,9 +1,0 @@
-﻿ID,Please select your program (this information is NOT used for the matching algorithm),Please select your preferred specialty for residency (this information is NOT used for the matching algorithm),How many beans would you like to assign to LAB â€“ TBC2 â€“ TBC3 â€“ TBC1?,How many beans would you like to assign to TBC2 â€“ LAB â€“ TBC1 â€“ TBC3?,How many beans would you like to assign to TBC3 â€“ TBC1 â€“ LAB â€“ TBC2?,How many beans would you like to assign to TBC1 â€“ TBC3 â€“ TBC2 â€“ LAB?
-abc1,College Program,INTM,0,0,12,12
-abc2,College Program,Plastic Surgery,0,0,0,24
-abc3,University Program,Neurology (incl Child Neuro),0,0,0,24
-abc4,University Program,Ophthalmology,0,0,24,0
-abc5,University Program,Urology,0,0,24,0
-abc6,University Program,Neurosurgery,0,0,0,24
-abc7,University Program,Anesthesiology,0,3,6,15
-abc8,University Program,Otolaryngology,0,12,12,0
