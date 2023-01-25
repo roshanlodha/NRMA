@@ -18,7 +18,7 @@ global error_df
 
 # immutable global variables
 simulate = False
-anon = True
+anon = False
 penalty = "beans"
 n_beans = 24
 n_student = 7
@@ -155,7 +155,7 @@ def main():
         preference_df = preference_df.drop(preference_df.columns[[1, 2]], axis=1)
     
     preference_df = preference_df.set_axis(
-        ["studentID"] + list(option_to_order_dict.values()), axis=1, copy=False
+        ["studentID"] + list(option_to_order_dict.values()), axis=1
     )
     preference_df = preference_df.sample(frac=1).reset_index(
         drop=True
@@ -171,7 +171,7 @@ def main():
     optimal_order, optimal_order_err = rotation_calc(cost)
 
     performance = to_string(optimal_order, optimal_order_err)
-    print(performance)
+    # print(performance)
 
     analyze(optimal_order, optimal_order_err, performance)
 

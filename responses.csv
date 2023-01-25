@@ -1,0 +1,78 @@
+﻿studentID,Please select your program (this information is NOT used for the matching algorithm),Please select your preferred specialty for residency (this information is NOT used for the matching algorithm),How many beans would you like to assign to LAB – TBC2 – TBC3 – TBC1?,How many beans would you like to assign to TBC2 – LAB – TBC1 – TBC3?,How many beans would you like to assign to TBC3 – TBC1 – LAB – TBC2?,How many beans would you like to assign to TBC1 – TBC3 – TBC2 – LAB?
+1,College Program,INTM,0,0,12,12
+2,College Program,Plastic Surgery,0,0,0,24
+3,University Program,Neurology (incl Child Neuro),0,0,0,24
+4,University Program,Ophthalmology,0,0,24,0
+5,University Program,Urology,0,0,24,0
+6,University Program,Anesthesiology,0,3,6,15
+7,University Program,Otolaryngology,0,12,12,0
+8,University Program,Surgery (incl integrated Thoracic or Vasc Surg),0,0,24,0
+9,University Program,Neurosurgery,0,0,24,0
+10,University Program,Ophthalmology,0,1,12,11
+11,College Program,Nephrology,1,2,14,7
+12,College Program,Neurology (incl Child Neuro),0,0,0,24
+13,University Program,Surgery (incl integrated Thoracic or Vasc Surg),0,10,14,0
+14,University Program,INTM,0,24,0,0
+15,College Program,pediatric oncology,0,0,24,0
+16,University Program,Dermatology,0,0,0,24
+17,College Program,Med Genetics,0,8,4,12
+18,College Program,Dermatology,0,24,0,0
+19,University Program,Ophthalmology,0,1,0,23
+20,College Program,Orthopedics,0,0,24,0
+21,College Program,Ophthalmology,0,24,0,0
+22,College Program,Rheumatology,0,24,0,0
+23,College Program,adult heme/onc,0,0,24,0
+24,College Program,Neurosurgery,0,0,24,0
+25,University Program,Urology,0,0,24,0
+26,University Program,Neurosurgery,0,6,18,0
+27,University Program,Radiology (Diag & Interventional),24,0,0,0
+28,College Program,Urology- maybe peds or onc,0,0,0,24
+29,College Program,Ophthalmology,0,0,20,4
+30,College Program,INTM,0,24,0,0
+31,College Program,Surgery (incl integrated Thoracic or Vasc Surg),0,0,0,24
+32,University Program,Undecided,0,0,0,24
+33,University Program,Radiology (Diag & Interventional),0,23,1,0
+34,University Program,Neurosurgery,0,0,12,12
+35,University Program,INTM,0,0,0,24
+36,University Program,Otolaryngology,0,0,24,0
+37,College Program,Radiology (Diag & Interventional),1,6,17,0
+38,University Program,Plastic Surgery,0,0,0,24
+39,University Program,Radiology (Diag & Interventional),0,0,0,24
+40,College Program,Ophthalmology,0,24,0,0
+41,University Program,Plastic Surgery,0,8,15,1
+42,University Program,Anesthesiology,0,0,0,24
+43,University Program,Dermatology,0,0,24,0
+44,University Program,Neurology (incl Child Neuro),0,0,0,24
+45,College Program,Neurosurgery,0,0,24,0
+46,College Program,Surgery (incl integrated Thoracic or Vasc Surg),1,15,1,7
+47,University Program,Plastic Surgery,0,0,24,0
+48,University Program,Neurosurgery,0,24,0,0
+49,University Program,Plastic Surgery,0,0,24,0
+50,College Program,Neurology (incl Child Neuro),0,24,0,0
+51,College Program,INTM,0,8,8,8
+52,University Program,Dermatology,0,0,24,0
+53,College Program,Orthopedics,0,0,24,0
+54,University Program,Neurosurgery,0,6,16,2
+55,College Program,Neurology (incl Child Neuro),0,0,24,0
+56,College Program,Psychiatry,0,0,24,0
+57,College Program,INTM,0,24,0,0
+58,College Program,Otolaryngology,0,24,0,0
+59,University Program,Urology,0,24,0,0
+60,University Program,Surgery (incl integrated Thoracic or Vasc Surg),0,0,24,0
+61,University Program,Orthopedics,0,0,23,1
+62,College Program,Surgery (incl integrated Thoracic or Vasc Surg),0,24,0,0
+63,College Program,INTM,0,0,0,24
+64,College Program,Urology,0,0,0,24
+65,University Program,Urology,0,0,24,0
+66,University Program,Neurosurgery,0,0,24,0
+67,University Program,INTM,0,22,1,1
+68,College Program,Ophthalmology,0,0,24,0
+69,University Program,Radiology (Diag & Interventional),0,0,24,0
+70,College Program,Ob/Gyn,0,0,0,24
+71,University Program,Undecided,0,0,24,0
+72,College Program,Ophthalmology,0,0,12,12
+73,University Program,Surgery (incl integrated Thoracic or Vasc Surg),0,24,0,0
+74,College Program,Med/Peds,0,0,24,0
+75,University Program,Orthopedics,0,21,2,1
+76,University Program,Orthopedics,0,0,24,0
+77,University Program,Orthopedics,0,11,12,1
