@@ -130,7 +130,8 @@ def to_string(optimal_order, optimal_order_err):
         option_to_order_dict
     )
 
-    performance.sort_values(by = ['studentID']).to_csv("./out/rotations.csv", index=False)
+    performance = performance.sort_values(by = ['studentID'])
+    performance.to_csv("./out/rotations.csv", index=False)
 
     return performance
 
@@ -143,6 +144,12 @@ def update_cost_matrix(row_ind, col_ind):
     for i in range(len(col_ind)):
         for mul in range(np.shape(cost)[0] // n_rotations):
             cost[i][(n_rotations * mul) + col_ind[i]] = 1000
+
+
+def TBC3_splitter():
+    TBC3_df = pd.concat([performance_df, preference_df.columns[[1, 2]]], axis=1)
+    TBC3_df = TBC3_df[TBC3_df['optimal_rotation'] == "Option 3"]
+    n_CCF = len(TBC3_df[])
 
 
 def main():    
@@ -172,6 +179,8 @@ def main():
 
     performance = to_string(optimal_order, optimal_order_err)
     # print(performance)
+
+    print(performance)
 
     analyze(optimal_order, optimal_order_err, performance)
 
