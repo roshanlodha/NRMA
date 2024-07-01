@@ -2,6 +2,8 @@
 
 This algorithm is designed to help third year medical students assign to the rotation order of their preference using a linear sum optimizer. The algorithm takes in the preferences of the students and the availability of the rotations, and assigns the students to the rotations in a way that maximizes the overall satisfaction of the students.
 
+To use this application via a web-interface (i.e. without python), visit [NRMA](https://nrma.pythonanywhere.com).
+
 ## Requirements
 
 In order to use this algorithm, you will need to have the following packages installed:
