@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ title or "NRMA Allocation Toolkit" }}</title>
+    <title>{{ title or "NRMA" }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
@@ -171,6 +171,15 @@
         border: 1px solid rgba(255, 99, 71, 0.4);
         margin-bottom: 1rem;
       }
+      .table-scroll {
+        max-height: 360px;
+        overflow: auto;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.25rem;
+        background: #fff;
+        margin-top: 1rem;
+      }
       footer {
         text-align: center;
         padding: 1rem;
@@ -191,7 +200,7 @@
   <body>
     <header>
       <div class="nav container">
-        <h1>NRMA Allocation Toolkit</h1>
+        <h1>NRMA</h1>
         <nav>
           <a href="{{ url_for('upload_file') }}" class="{% if active_page == 'upload' %}active{% endif %}">Assignments</a>
           <a href="{{ url_for('simulations') }}" class="{% if active_page == 'simulations' %}active{% endif %}">Stress Tests</a>

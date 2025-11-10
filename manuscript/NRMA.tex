@@ -184,6 +184,51 @@ As the number of students increases, the total delta error decreased exponential
     \label{fig:fig1}
 \end{figure}
 
+\subsubsection{Preference distribution stress tests}
+To quantify how different preference regimes influence allocation quality, we stress-tested the algorithm across five synthetic distributions (uniform, single peak, clustered, polarized, and ``top two'') using the simulator introduced in this repository. Each scenario was run for 25 Monte Carlo repetitions with 80 students and 24 beans per student. Figures \ref{fig:beans_stress} and \ref{fig:linear_stress} summarize the aggregate behavior under the bean-penalty and linear-penalty formulations, respectively. Under bean penalties, clustered and top-two cohorts produced the lowest average error and frequently exceeded a 90\% first-choice hit rate, whereas single-peak and polarized cohorts saturated quickly, capping first-choice satisfaction below 60\%. The linear penalty inverts the magnitude of the measured error but preserves the ordering---clustered cohorts again fare best, while single-peak and polarized preferences remain the most challenging due to heavy contention for a single rotation order.
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/stress_beans_avg_error.png}
+        \caption{Average error by distribution.}
+    \end{subfigure}
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/stress_beans_first_choice.png}
+        \caption{First-choice probability.}
+    \end{subfigure}
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/stress_beans_run_trend.png}
+        \caption{Average error across runs.}
+    \end{subfigure}
+    \caption{Stress-test metrics for the bean-penalty formulation across five preference distributions.}
+    \label{fig:beans_stress}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/stress_linear_avg_error.png}
+        \caption{Average error by distribution.}
+    \end{subfigure}
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/stress_linear_first_choice.png}
+        \caption{First-choice probability.}
+    \end{subfigure}
+    \begin{subfigure}{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/stress_linear_run_trend.png}
+        \caption{Average error across runs.}
+    \end{subfigure}
+    \caption{Stress-test metrics for the linear-penalty formulation using the same synthetic cohorts as Figure \ref{fig:beans_stress}.}
+    \label{fig:linear_stress}
+\end{figure}
+
 \subsection{Practical deployment.}
 \subsubsection{Definition of Parameters}
 We asked $n = 77$ students to assign $b = 24$ beans to any permutation of $k = 4$ possible rotation orders (Table \ref{tab:tab1}). We employed a maximum number of $b = 24$ beans per student to allow for integer divisions of beans into preferences. We chose 24 beans as it is $k!$ allowing for integer divisions into each possible category. 

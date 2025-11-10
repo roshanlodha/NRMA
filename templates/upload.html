@@ -35,5 +35,31 @@
     <button type="button">Download assignment.csv</button>
   </a>
 </div>
+{% if assignment_table %}
+<div class="card">
+  <h2>Assignment Preview</h2>
+  <p>The table below mirrors the downloaded CSV. Scroll to review assignments directly in the browser.</p>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          {% for col in assignment_columns %}
+          <th>{{ col }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in assignment_table %}
+        <tr>
+          {% for col in assignment_columns %}
+          <td>{{ row[col] }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
 {% endif %}
 {% endblock %}

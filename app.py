@@ -26,7 +26,13 @@ DEFAULT_SIM_SETTINGS = {
 
 @app.route("/")
 def upload_file() -> str:
-    return render_template("upload.html", active_page="upload")
+    return render_template(
+        "upload.html",
+        active_page="upload",
+        assignment_ready=False,
+        assignment_table=None,
+        assignment_columns=[],
+    )
 
 
 @app.route("/upload", methods=["POST"])
@@ -42,16 +48,20 @@ def upload_file_post():
     file.save(filepath)
 
     assignment_path = UPLOAD_DIR / ASSIGNMENT_FILENAME
-    _, summary = assign_rotations_from_file(
+    performance, summary = assign_rotations_from_file(
         filepath,
         output_path=assignment_path,
     )
+    assignment_columns = list(performance.columns)
+    assignment_table = performance.to_dict(orient="records")
 
     return render_template(
         "upload.html",
         assignment_ready=True,
         summary=summary,
         active_page="upload",
+        assignment_table=assignment_table,
+        assignment_columns=assignment_columns,
     )
 
 
