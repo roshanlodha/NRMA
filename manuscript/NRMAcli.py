@@ -1,6 +1,11 @@
 import pandas as pd
 import numpy as np
+import sys
+
+# using optimized elinear sums problem solver
 from scipy.optimize import linear_sum_assignment
+
+# used for optimal number of beans
 from scipy.special import factorial
 
 np.random.seed(44106)  # seed set for reproducibility
@@ -18,7 +23,7 @@ penalty = "beans"
 n_beans = 24
 n_student = 7
 n_rotations = 4
-filename = ""
+filename = sys.argv[1]
 
 # definitions and converters
 rotationdict = {0: "Option 1", 1: "Option 2", 2: "Option 3", 3: "Option 4"}
@@ -33,7 +38,7 @@ order_to_option_dict = {v: k for k, v in option_to_order_dict.items()}
 
 def build_cost_matrix(preference_df):
     """
-    Convert preferences to cost and apply optional penalties to skew costs
+    convert preferences to cost and apply optional penalties to skew costs
     """
     # normalize to max number of beans
     cost_df = preference_df.drop(columns=["studentID"]).astype(float)
@@ -55,7 +60,7 @@ def build_cost_matrix(preference_df):
 
 def cost_to_rank(cost_matrix):
     """
-    Convert the bean ranking to a preferences ranking (linear penalty)
+    convert the bean ranking to a preferences ranking (linear penalty)
     """
     for i in range(n_rotations):
         cost_matrix[np.where(cost_matrix == np.max(cost_matrix))] = i - n_rotations
@@ -64,9 +69,9 @@ def cost_to_rank(cost_matrix):
 
 def pad_matrix(cost):
     """
-    1. Pad matrix to multiples of n_rotations
-    2. Add one ghost row and ceil(n_students/n_rotations) - 1 duplicate columns
-    3. Add duplicate columns to ensure square optimization problem
+    1. pad matrix to multiples of n_rotations
+    2. add one ghost row and ceil(n_students/n_rotations) - 1 duplicate columns
+    3. add duplicate columns to ensure square optimization problem
     """
     global phantom_students
     phantom_students = 0
@@ -84,7 +89,7 @@ def rotation_calc(cost):
     Runs linear_sum_assignment on cost matrix and stores the optimal results in col_ind.
     """
     row_ind, col_ind = linear_sum_assignment(cost)
-    err = cost[row_ind, col_ind].sum()  # cumulative distance for each bean preference
+    err = cost[row_ind, col_ind].sum() # cumulative distance for each bean preference
 
     rotation_index = (
         col_ind % n_rotations
@@ -100,13 +105,16 @@ def analyze(optimal_order, optimal_order_err, performance=None):
     global error_df
     delta = optimal_order_err / n_student / n_beans
 
-    print(f"Average error of assignment for first rotation:", delta)
+    print(
+        f"Average error of assignment for first rotation:",
+        delta,
+    )
     matches = sum(
         preference_df.drop(columns=["studentID"]).idxmax(axis=1)
         == performance["rotation_order"]
     )
     print(
-        f"Percent of students who received their first choice rotation:",
+        f"Percent of students who recieved their first choice rotation:",
         matches / n_student,
     )
 
@@ -122,35 +130,37 @@ def to_string(optimal_order, optimal_order_err):
         option_to_order_dict
     )
 
-    performance = performance.sort_values(by=['studentID'])
-    output_filepath = './uploads/assignment.csv'
-    performance.to_csv(output_filepath, index=False)
+    performance = performance.sort_values(by = ['studentID'])
+    performance.to_csv("./out/rotations.csv", index=False)
 
     return performance
 
 
 def update_cost_matrix(row_ind, col_ind):
     """
-    Greatly increases the penalty of rematching to the same rotation
-    This is a legacy function that is no longer necessary in the current interpretation of the problem
+    greatly increases the penalty of rematching to the same rotation
+    this is a legacy function that is no longer necessary in the current interpretation of the problem
     """
     for i in range(len(col_ind)):
         for mul in range(np.shape(cost)[0] // n_rotations):
             cost[i][(n_rotations * mul) + col_ind[i]] = 1000
 
 
-def main(file_path):
+def TBC3_splitter():
+    TBC3_df = pd.concat([performance_df, preference_df.columns[[1, 2]]], axis=1)
+    TBC3_df = TBC3_df[TBC3_df['optimal_rotation'] == "Option 3"]
+    n_CCF = len(TBC3_df[])
+
+
+def main():    
+    # load preference dataframe
     global preference_df
-    global filename
-    filename = file_path
+    preference_df = pd.read_csv(filename, encoding = 'cp1252')  # given at sysargs
 
-    # Load preference dataframe
-    preference_df = pd.read_csv(filename, encoding='cp1252')  # given at sysargs
-
-    # Cleanup of dataframe columns
+    # cleanup of dataframe columns
     if not anon:
         preference_df = preference_df.drop(preference_df.columns[[1, 2]], axis=1)
-
+    
     preference_df = preference_df.set_axis(
         ["studentID"] + list(option_to_order_dict.values()), axis=1
     )
@@ -158,8 +168,9 @@ def main(file_path):
         drop=True
     )  # shuffle the students so order no longer leads to preference
 
-    global n_student
     studentIDs = preference_df["studentID"]
+
+    global n_student
     n_student = len(studentIDs)
 
     cost = build_cost_matrix(preference_df)
@@ -167,15 +178,13 @@ def main(file_path):
     optimal_order, optimal_order_err = rotation_calc(cost)
 
     performance = to_string(optimal_order, optimal_order_err)
+    # print(performance)
+
     print(performance)
 
-    #analyze(optimal_order, optimal_order_err, performance)
+    analyze(optimal_order, optimal_order_err, performance)
 
 
 error_df = pd.DataFrame(columns=["students", "beans", "error"])
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python NRMA.py <path_to_csv_file>")
-    else:
-        main(sys.argv[1])
+main()

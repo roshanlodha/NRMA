@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h2>Upload Preference CSV</h2>
+  <p>Upload the exported CSV (Qualtrics/Forms) and download the optimized rotation assignments.</p>
+  <form method="post" action="{{ url_for('upload_file_post') }}" enctype="multipart/form-data">
+    <label for="file">Preference file (.csv)</label>
+    <input type="file" id="file" name="file" accept=".csv" required />
+    <div style="margin-top: 1rem;">
+      <button type="submit">Process Preferences</button>
+    </div>
+  </form>
+</div>
+
+{% if assignment_ready %}
+<div class="card">
+  <h2>Results</h2>
+  <div class="stats-grid">
+    <div class="stat">
+      <h3>Total Error</h3>
+      <p>{{ "%.2f"|format(summary.total_error) }}</p>
+    </div>
+    <div class="stat">
+      <h3>Avg Error</h3>
+      <p>{{ "%.4f"|format(summary.average_error) }}</p>
+    </div>
+    <div class="stat">
+      <h3>First Choice</h3>
+      <p>{{ "%.1f"|format(summary.pct_first_choice * 100) }}%</p>
+    </div>
+  </div>
+  <p style="margin-top: 1rem;">Download the allocation file and share it with the cohort.</p>
+  <a href="{{ url_for('download_file') }}" style="text-decoration: none;">
+    <button type="button">Download assignment.csv</button>
+  </a>
+</div>
+{% endif %}
+{% endblock %}

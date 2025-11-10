@@ -1,190 +1,260 @@
-import pandas as pd
-import numpy as np
-import sys
+from __future__ import annotations
 
-# using optimized elinear sums problem solver
+import argparse
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Literal, Tuple
+
+import numpy as np
+import pandas as pd
 from scipy.optimize import linear_sum_assignment
 
-# used for optimal number of beans
-from scipy.special import factorial
+Penalty = Literal["beans", "linear"]
 
-np.random.seed(44106)  # seed set for reproducibility
-
-# mutable global variables
-global preference_df
-global studentIDs
-global phantom_students
-global error_df
-
-# immutable global variables
-simulate = False
-anon = False
-penalty = "beans"
-n_beans = 24
-n_student = 7
-n_rotations = 4
-filename = sys.argv[1]
-
-# definitions and converters
-rotationdict = {0: "Option 1", 1: "Option 2", 2: "Option 3", 3: "Option 4"}
-option_to_order_dict = {
+ROTATION_LABELS = {0: "Option 1", 1: "Option 2", 2: "Option 3", 3: "Option 4"}
+ROTATION_TO_ORDER = {
     "Option 1": "LAB – TBC2 – TBC3 – TBC1",
     "Option 2": "TBC2 – LAB – TBC1 – TBC3",
     "Option 3": "TBC3 – TBC1 – LAB – TBC2",
     "Option 4": "TBC1 – TBC3 – TBC2 – LAB",
 }
-order_to_option_dict = {v: k for k, v in option_to_order_dict.items()}
+ORDER_TO_ROTATION = {v: k for k, v in ROTATION_TO_ORDER.items()}
+N_ROTATIONS = len(ROTATION_LABELS)
 
 
-def build_cost_matrix(preference_df):
+@dataclass
+class AssignmentSummary:
+    total_error: float
+    average_error: float
+    pct_first_choice: float
+    output_path: Path | None = None
+
+
+def load_preferences(
+    filepath: str | Path,
+    *,
+    drop_identifiers: bool = True,
+    shuffle: bool = True,
+) -> pd.DataFrame:
     """
-    convert preferences to cost and apply optional penalties to skew costs
+    Load the CSV exported from Qualtrics/Forms and normalize column names.
     """
-    # normalize to max number of beans
+    preference_df = pd.read_csv(filepath, encoding="cp1252")
+
+    if drop_identifiers:
+        preference_df = preference_df.drop(preference_df.columns[[1, 2]], axis=1)
+
+    preference_df = preference_df.set_axis(
+        ["studentID"] + list(ROTATION_TO_ORDER.values()), axis=1
+    )
+
+    if shuffle:
+        preference_df = preference_df.sample(frac=1).reset_index(drop=True)
+
+    return preference_df
+
+
+def assign_rotations(
+    preference_df: pd.DataFrame,
+    *,
+    penalty: Penalty = "beans",
+    n_beans: int = 24,
+) -> Tuple[pd.DataFrame, AssignmentSummary]:
+    cost_matrix, phantom_students = _build_cost_matrix(
+        preference_df, penalty=penalty, n_beans=n_beans
+    )
+    rotations, total_error = _rotation_calc(cost_matrix, phantom_students, n_beans)
+    performance = _combine_results(preference_df, rotations, phantom_students)
+    summary = _summarize_results(performance, total_error, n_beans)
+    return performance, summary
+
+
+def assign_rotations_from_file(
+    filepath: str | Path,
+    *,
+    penalty: Penalty = "beans",
+    n_beans: int = 24,
+    drop_identifiers: bool = True,
+    shuffle: bool = True,
+    output_path: str | Path | None = None,
+) -> Tuple[pd.DataFrame, AssignmentSummary]:
+    preference_df = load_preferences(
+        filepath, drop_identifiers=drop_identifiers, shuffle=shuffle
+    )
+    performance, summary = assign_rotations(
+        preference_df, penalty=penalty, n_beans=n_beans
+    )
+
+    if output_path:
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        performance.to_csv(output_path, index=False)
+        summary.output_path = output_path
+
+    return performance, summary
+
+
+def _build_cost_matrix(
+    preference_df: pd.DataFrame,
+    *,
+    penalty: Penalty,
+    n_beans: int,
+) -> Tuple[np.ndarray, int]:
+    """
+    Convert weighted bean preferences into a padded square matrix ready for
+    linear sum assignment.
+    """
     cost_df = preference_df.drop(columns=["studentID"]).astype(float)
     cost_df = cost_df.div(cost_df.sum(axis=1), axis=0) * n_beans
     cost_df = cost_df.fillna(0)
 
-    # convert to costs
     cost_df = cost_df.sub(cost_df.sum(axis=1), axis=0) * -1
     cost_matrix = pd.DataFrame.to_numpy(cost_df)
 
-    # add penalty
-    if penalty == "beans":
-        pass
-    elif penalty == "linear":
-        cost_matrix = cost_to_rank(cost_matrix)
+    if penalty == "linear":
+        cost_matrix = _cost_to_rank(cost_matrix)
 
-    return pad_matrix(cost_matrix)
+    return _pad_matrix(cost_matrix, n_beans)
 
 
-def cost_to_rank(cost_matrix):
+def _cost_to_rank(cost_matrix: np.ndarray) -> np.ndarray:
     """
-    convert the bean ranking to a preferences ranking (linear penalty)
+    Convert bean counts into a rank preference penalty structure.
     """
-    for i in range(n_rotations):
-        cost_matrix[np.where(cost_matrix == np.max(cost_matrix))] = i - n_rotations
-    return cost_matrix * -1
+    ranked = cost_matrix.copy()
+    for rank in range(N_ROTATIONS):
+        ranked[np.where(ranked == np.max(ranked))] = rank - N_ROTATIONS
+    return ranked * -1
 
 
-def pad_matrix(cost):
+def _pad_matrix(cost: np.ndarray, n_beans: int) -> Tuple[np.ndarray, int]:
     """
-    1. pad matrix to multiples of n_rotations
-    2. add one ghost row and ceil(n_students/n_rotations) - 1 duplicate columns
-    3. add duplicate columns to ensure square optimization problem
+    1. Pad rows to a multiple of the number of rotations.
+    2. Tile columns to maintain a square cost matrix for linear assignment.
     """
-    global phantom_students
     phantom_students = 0
+    padded = cost
 
-    while np.shape(cost)[0] % n_rotations != 0:
-        cost = np.vstack([cost, np.full(n_rotations, n_beans)])
+    while padded.shape[0] % N_ROTATIONS != 0:
+        padded = np.vstack([padded, np.full(N_ROTATIONS, n_beans)])
         phantom_students += 1
 
-    cost = np.tile(cost, (1, np.shape(cost)[0] // n_rotations))
-    return cost
+    padded = np.tile(padded, (1, padded.shape[0] // N_ROTATIONS))
+    return padded, phantom_students
 
 
-def rotation_calc(cost):
-    """
-    Runs linear_sum_assignment on cost matrix and stores the optimal results in col_ind.
-    """
-    row_ind, col_ind = linear_sum_assignment(cost)
-    err = cost[row_ind, col_ind].sum() # cumulative distance for each bean preference
+def _rotation_calc(
+    cost_matrix: np.ndarray, phantom_students: int, n_beans: int
+) -> Tuple[list[str], float]:
+    row_ind, col_ind = linear_sum_assignment(cost_matrix)
+    total_error = cost_matrix[row_ind, col_ind].sum()
 
-    rotation_index = (
-        col_ind % n_rotations
-    )  # re-wraps the indicies to their human readable form
-    rotations = [rotationdict.get(index) for index in rotation_index]
+    rotation_index = col_ind % N_ROTATIONS
+    rotations = [ROTATION_LABELS.get(index, "Option 1") for index in rotation_index]
 
-    err = err - phantom_students * n_beans  # correction factor for phantom students
-
-    return rotations, err
+    total_error -= phantom_students * n_beans
+    return rotations, total_error
 
 
-def analyze(optimal_order, optimal_order_err, performance=None):
-    global error_df
-    delta = optimal_order_err / n_student / n_beans
+def _combine_results(
+    preference_df: pd.DataFrame, rotations: list[str], phantom_students: int
+) -> pd.DataFrame:
+    rotation_frame = pd.DataFrame({"optimal_rotation": rotations})
+    if phantom_students:
+        rotation_frame = rotation_frame.iloc[:-phantom_students]
 
-    print(
-        f"Average error of assignment for first rotation:",
-        delta,
-    )
-    matches = sum(
-        preference_df.drop(columns=["studentID"]).idxmax(axis=1)
-        == performance["rotation_order"]
-    )
-    print(
-        f"Percent of students who recieved their first choice rotation:",
-        matches / n_student,
-    )
-
-
-def to_string(optimal_order, optimal_order_err):
-    rotations = pd.DataFrame({"optimal_rotation": optimal_order})
-    rotations.drop(
-        rotations.tail(phantom_students).index, inplace=True
-    )  # remove the phantom students
-
-    performance = pd.concat([preference_df, rotations], axis=1)
+    performance = pd.concat([preference_df.reset_index(drop=True), rotation_frame], axis=1)
     performance["rotation_order"] = performance["optimal_rotation"].map(
-        option_to_order_dict
+        ROTATION_TO_ORDER
+    )
+    return performance.sort_values(by=["studentID"]).reset_index(drop=True)
+
+
+def _summarize_results(
+    performance: pd.DataFrame,
+    total_error: float,
+    n_beans: int,
+) -> AssignmentSummary:
+    n_students = len(performance)
+    avg_error = total_error / (n_students * n_beans) if n_students else 0
+    matches = (
+        performance.drop(columns=["studentID", "optimal_rotation"])
+        .filter(items=list(ROTATION_TO_ORDER.values()))
+        .idxmax(axis=1)
+    )
+    pct_first_choice = (
+        (matches == performance["rotation_order"]).mean() if n_students else 0
     )
 
-    performance = performance.sort_values(by = ['studentID'])
-    performance.to_csv("./out/rotations.csv", index=False)
-
-    return performance
-
-
-def update_cost_matrix(row_ind, col_ind):
-    """
-    greatly increases the penalty of rematching to the same rotation
-    this is a legacy function that is no longer necessary in the current interpretation of the problem
-    """
-    for i in range(len(col_ind)):
-        for mul in range(np.shape(cost)[0] // n_rotations):
-            cost[i][(n_rotations * mul) + col_ind[i]] = 1000
-
-
-def TBC3_splitter():
-    TBC3_df = pd.concat([performance_df, preference_df.columns[[1, 2]]], axis=1)
-    TBC3_df = TBC3_df[TBC3_df['optimal_rotation'] == "Option 3"]
-    n_CCF = len(TBC3_df[])
-
-
-def main():    
-    # load preference dataframe
-    global preference_df
-    preference_df = pd.read_csv(filename, encoding = 'cp1252')  # given at sysargs
-
-    # cleanup of dataframe columns
-    if not anon:
-        preference_df = preference_df.drop(preference_df.columns[[1, 2]], axis=1)
-    
-    preference_df = preference_df.set_axis(
-        ["studentID"] + list(option_to_order_dict.values()), axis=1
+    return AssignmentSummary(
+        total_error=total_error,
+        average_error=avg_error,
+        pct_first_choice=float(pct_first_choice),
     )
-    preference_df = preference_df.sample(frac=1).reset_index(
-        drop=True
-    )  # shuffle the students so order no longer leads to preference
-
-    studentIDs = preference_df["studentID"]
-
-    global n_student
-    n_student = len(studentIDs)
-
-    cost = build_cost_matrix(preference_df)
-
-    optimal_order, optimal_order_err = rotation_calc(cost)
-
-    performance = to_string(optimal_order, optimal_order_err)
-    # print(performance)
-
-    print(performance)
-
-    analyze(optimal_order, optimal_order_err, performance)
 
 
-error_df = pd.DataFrame(columns=["students", "beans", "error"])
+__all__ = [
+    "AssignmentSummary",
+    "assign_rotations",
+    "assign_rotations_from_file",
+    "load_preferences",
+    "ORDER_TO_ROTATION",
+    "ROTATION_LABELS",
+    "ROTATION_TO_ORDER",
+]
 
-main()
+
+def _parse_cli_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Assign students to rotations based on preference beans."
+    )
+    parser.add_argument("csv_path", help="Path to the preference CSV.")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("out/rotations.csv"),
+        help="Where to write the resulting assignment CSV.",
+    )
+    parser.add_argument(
+        "--penalty",
+        choices=["beans", "linear"],
+        default="beans",
+        help="Penalty structure to use when constructing the cost matrix.",
+    )
+    parser.add_argument(
+        "--beans",
+        type=int,
+        default=24,
+        help="Total number of beans allocated per student.",
+    )
+    parser.add_argument(
+        "--keep-identifiers",
+        action="store_true",
+        help="Keep identifying columns 2 and 3 instead of dropping them.",
+    )
+    parser.add_argument(
+        "--no-shuffle",
+        action="store_true",
+        help="Disable shuffling before running the optimizer.",
+    )
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = _parse_cli_args()
+    _, summary = assign_rotations_from_file(
+        args.csv_path,
+        output_path=args.output,
+        penalty=args.penalty,
+        n_beans=args.beans,
+        drop_identifiers=not args.keep_identifiers,
+        shuffle=not args.no_shuffle,
+    )
+    print(f"Wrote assignments to {args.output}")
+    print(f"Total error: {summary.total_error:.2f}")
+    print(f"Average error: {summary.average_error:.4f}")
+    print(f"First choice hit rate: {summary.pct_first_choice:.2%}")
+
+
+if __name__ == "__main__":
+    main()

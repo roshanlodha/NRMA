@@ -2,7 +2,7 @@
 
 This algorithm is designed to help third year medical students assign to the rotation order of their preference using a linear sum optimizer. The algorithm takes in the preferences of the students and the availability of the rotations, and assigns the students to the rotations in a way that maximizes the overall satisfaction of the students.
 
-To use this application via a web-interface (i.e. without python), visit [NRMA](https://nrma.pythonanywhere.com).
+To use this application via a web-interface, run the bundled Flask application (see below) or visit [NRMA](https://nrma.pythonanywhere.com).
 
 ## Requirements
 
@@ -20,23 +20,38 @@ pip3 install -r requirements.txt
 
 ## Usage
 
-To use the algorithm, the path of the preference matrix should be specified as the `filename` in the command line when running `NRMA.py` (see example below). The preference matrix should be a csv file with rows representing the students and columns representing the rotation preferences. The values in the matrix should represent the student's preference for the rotation, with higher values indicating a stronger preference.
+### Web interface
 
-The optimal rotation order assignment can be found by running the following command:
+1. Install the requirements described above.
+2. Start the Flask server from the project root:
+   ```
+   python app.py
+   ```
+3. Visit `http://127.0.0.1:5000/`, upload the CSV export, and download the generated `assignment.csv`.
+4. Open the **Stress Tests** tab to generate simulation runs, view charts, and download the aggregated results when stress-testing new policies.
 
+### Command-line utility
+
+The assignment logic now lives in `nrma.py`. You can run it directly from a Python shell or script:
+
+```python
+from nrma import assign_rotations_from_file
+assign_rotations_from_file("batch_test.csv", output_path="out/rotations.csv")
 ```
-python3 NRMA.py batch_test.csv
-```
+
+The helper returns both the processed dataframe and a performance summary (average error, percent of students receiving their first choice, etc.).
 
 ### Beans vs Linear Mode
 The `linear` mode requires a preference.csv file with ranked preferences, while the `beans` mode requires a performance,csv file with assigned beans. More information about beans assignment can be found [here](./MANUSCRIPT.md).
 
 ### Simulation File
-Advanced testing for different penalty functions can be done via `NRMA_simulate.py`.
+Advanced testing for different penalty functions can be done via the modern simulator: `python stress_tests.py --runs 100 --students 120 --distributions uniform clustered`. The same simulator powers the `/simulations` page in the Flask UI, so you can tune parameters and view charts without leaving the browser.
+
+The original CLI script is preserved at `manuscript/NRMAcli.py` for archival/documentation purposes.
 
 ## Example
 
-Running `python3 NRMA.py` on the provided test file assigns a group of 8 students to 4 rotation orders.
+Running `python nrma.py responses.csv --output out/rotations.csv` on the provided test file assigns a group of 8 students to 4 rotation orders.
 The output of this code should be:
 ```
   studentID  ...            rotation_order
@@ -51,6 +66,6 @@ The output of this code should be:
 
 [8 rows x 7 columns]
 Average error of assignment for first rotation: 0.421875
-Percent of students who recieved their first choice rotation: 0.625
+Percent of students who received their first choice rotation: 0.625
 ```
 Note that the order of students is stochastic. 
