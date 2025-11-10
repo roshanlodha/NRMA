@@ -1,71 +1,104 @@
-# Rotation Order Matching Algorithm
+# NRMA Rotation Assignment Toolkit
 
-This algorithm is designed to help third year medical students assign to the rotation order of their preference using a linear sum optimizer. The algorithm takes in the preferences of the students and the availability of the rotations, and assigns the students to the rotations in a way that maximizes the overall satisfaction of the students.
+A modernized toolkit for assigning third-year medical students to clinical rotation tracks. It bundles a production-ready Flask UI, a composable Python module, and an interactive stress-test lab so you can audit fairness before schedules go live.
 
-To use this application via a web-interface, run the bundled Flask application (see below) or visit [NRMA](https://nrma.pythonanywhere.com).
+## Highlights
+- **Web experience** – Upload the Qualtrics/Forms CSV, review summary metrics, and download the optimized `assignment.csv`.
+- **Simulation lab** – Explore how the optimizer performs under uniform, clustered, polarized, or custom preference distributions, with charts rendered directly in the browser.
+- **Python API & CLI** – Import `nrma.py` in your own notebooks or run it from the command line for scripted workflows.
+- **Reproducible stress tests** – The `stress_tests.py` CLI mirrors the UI experience and produces CSV summaries for further analysis.
+- **Legacy reference** – The original CLI script lives on in `manuscript/NRMAcli.py` for archival and manuscript reproducibility.
 
-## Requirements
-
-In order to use this algorithm, you will need to have the following packages installed:
-
-* Python3 
-* Pandas (for data manipulation and analysis)
-* SciPy (for optimization functions)
-* NumPy (for numerical computing)
-
-You can install these packages by running the following command in the downloaded path:
+## Repository Layout
 ```
-pip3 install -r requirements.txt
+.
+├── app.py               # Flask entry point (upload + stress-test pages)
+├── nrma.py              # Core assignment logic & CLI
+├── stress_tests.py      # Simulation library + CLI
+├── templates/           # Shared UI templates (base + upload + simulations)
+├── uploads/             # Runtime output directory for assignment.csv
+├── out/, plots/         # Optional analysis artifacts
+├── responses.csv        # Sample preferences file for local testing
+└── manuscript/          # Manuscript assets and the archival NRMAcli script
 ```
 
-## Usage
+## Prerequisites
+- Python 3.9+
+- System dependencies required by SciPy/matplotlib (e.g., `gcc`, `libopenblas`)
+- Python packages listed in `requirements.txt`
 
-### Web interface
+Install everything inside a virtual environment:
+```bash
+python3 -m venv env
+source env/bin/activate
+pip install -r requirements.txt
+```
 
-1. Install the requirements described above.
-2. Start the Flask server from the project root:
-   ```
+## Running the Web App
+1. Activate your virtual environment.
+2. Start the server from the project root:
+   ```bash
    python app.py
    ```
-3. Visit `http://127.0.0.1:5000/`, upload the CSV export, and download the generated `assignment.csv`.
-4. Open the **Stress Tests** tab to generate simulation runs, view charts, and download the aggregated results when stress-testing new policies.
+3. Open `http://127.0.0.1:5000/`.
+4. Use the **Assignments** tab to upload the CSV export and download the generated `assignment.csv` (stored under `uploads/`).
+5. Switch to **Stress Tests** to configure distributions, run simulations, and inspect the charts/summary tables inline.
 
-### Command-line utility
+The UI uses the same assignment engine and simulation code paths as the CLI tools, so you can trust that browser experiments match scripted runs.
 
-The assignment logic now lives in `nrma.py`. You can run it directly from a Python shell or script:
+## Python Module & CLI
+`nrma.py` exposes both reusable helpers and an ergonomic CLI:
+```bash
+python nrma.py responses.csv \
+  --output out/rotations.csv \
+  --penalty beans \
+  --beans 24
+```
 
+Programmatic usage:
 ```python
 from nrma import assign_rotations_from_file
-assign_rotations_from_file("batch_test.csv", output_path="out/rotations.csv")
+
+performance_df, summary = assign_rotations_from_file(
+    "responses.csv",
+    output_path="out/rotations.csv",
+    penalty="beans",
+    n_beans=24,
+)
+print(summary)
 ```
 
-The helper returns both the processed dataframe and a performance summary (average error, percent of students receiving their first choice, etc.).
+Key CLI flags:
+- `--penalty {beans,linear}` – choose bean weighting or rank-based penalties.
+- `--beans N` – total beans per student (default 24).
+- `--keep-identifiers` – prevent automatic removal of identifying columns 2 & 3.
+- `--no-shuffle` – preserve original student order when debugging.
 
-### Beans vs Linear Mode
-The `linear` mode requires a preference.csv file with ranked preferences, while the `beans` mode requires a performance,csv file with assigned beans. More information about beans assignment can be found [here](./MANUSCRIPT.md).
-
-### Simulation File
-Advanced testing for different penalty functions can be done via the modern simulator: `python stress_tests.py --runs 100 --students 120 --distributions uniform clustered`. The same simulator powers the `/simulations` page in the Flask UI, so you can tune parameters and view charts without leaving the browser.
-
-The original CLI script is preserved at `manuscript/NRMAcli.py` for archival/documentation purposes.
-
-## Example
-
-Running `python nrma.py responses.csv --output out/rotations.csv` on the provided test file assigns a group of 8 students to 4 rotation orders.
-The output of this code should be:
+## Stress-Test CLI
+The same simulation engine that powers the web UI is available at the command line:
+```bash
+python stress_tests.py \
+  --distributions uniform clustered polarized \
+  --runs 200 \
+  --students 120 \
+  --beans 24 \
+  --penalty beans \
+  --output out/simulations
 ```
-  studentID  ...            rotation_order
-0      abc6  ...  TBC1 – TBC3 – TBC2 – LAB
-1      abc8  ...  TBC2 – LAB – TBC1 – TBC3
-2      abc3  ...  TBC1 – TBC3 – TBC2 – LAB
-3      abc4  ...  TBC3 – TBC1 – LAB – TBC2
-4      abc1  ...  LAB – TBC2 – TBC3 – TBC1
-5      abc5  ...  TBC3 – TBC1 – LAB – TBC2
-6      abc2  ...  LAB – TBC2 – TBC3 – TBC1
-7      abc7  ...  TBC2 – LAB – TBC1 – TBC3
 
-[8 rows x 7 columns]
-Average error of assignment for first rotation: 0.421875
-Percent of students who received their first choice rotation: 0.625
-```
-Note that the order of students is stochastic. 
+Outputs:
+- `out/simulations/simulation_runs.csv` – every run with detailed metrics.
+- `out/simulations/distribution_summary.csv` – aggregated stats (avg error, hit rates, etc.).
+
+The CLI automatically produces the images embedded in the UI when invoked from Flask, but you can import `build_charts` in notebooks if you need custom dashboards.
+
+## Sample Data
+- `responses.csv` – anonymized example you can use to test both the CLI and the UI.
+- Generated artifacts appear in `uploads/assignment.csv` (web) or whatever `--output` path you specify.
+
+## Legacy + Manuscript Assets
+- `manuscript/NRMAcli.py` – original CLI preserved for manuscript reproducibility.
+- `manuscript/NRMA.tex`, poster, images, and bibliography – supporting research materials. They are untouched by the modern toolchain but remain available for reference.
+
+## Support & Contributions
+Bug reports, feature ideas, or performance findings from your own stress tests are welcome. Please open an issue or a PR with reproducible steps (including sample CSVs or simulator settings) so the maintainers can iterate quickly. Happy matching!
