@@ -5,9 +5,10 @@ import base64
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
-from typing import Callable, Dict, Iterable
+from typing import Callable, Dict, Iterable, Sequence
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -145,28 +146,31 @@ def run_trials(
     n_beans: int,
     penalty: str,
     seed: int,
+    bean_values: Sequence[int] | None = None,
 ) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     records = []
+    beans_list = list(bean_values) if bean_values else [n_beans]
     for key in distribution_keys:
         if key not in DISTRIBUTIONS:
             raise ValueError(f"Unknown distribution '{key}'. Choices: {list(DISTRIBUTIONS)}")
         generator = DISTRIBUTIONS[key].generator
-        for run in range(1, runs + 1):
-            preferences = generator(rng, n_students, n_beans)
-            _, summary = assign_rotations(preferences, penalty=penalty, n_beans=n_beans)
-            records.append(
-                {
-                    "distribution": key,
-                    "run": run,
-                    "students": n_students,
-                    "beans": n_beans,
-                    "penalty": penalty,
-                    "total_error": summary.total_error,
-                    "average_error": summary.average_error,
-                    "pct_first_choice": summary.pct_first_choice,
-                }
-            )
+        for beans in beans_list:
+            for run in range(1, runs + 1):
+                preferences = generator(rng, n_students, beans)
+                _, summary = assign_rotations(preferences, penalty=penalty, n_beans=beans)
+                records.append(
+                    {
+                        "distribution": key,
+                        "run": run,
+                        "students": n_students,
+                        "beans": beans,
+                        "penalty": penalty,
+                        "total_error": summary.total_error,
+                        "average_error": summary.average_error,
+                        "pct_first_choice": summary.pct_first_choice,
+                    }
+                )
     return pd.DataFrame(records)
 
 
@@ -246,6 +250,36 @@ def build_charts(results: pd.DataFrame) -> Dict[str, str]:
     ax.set_title("Average Error Across Runs")
     charts["Run Trajectory"] = _fig_to_data_uri(fig)
 
+    if results["beans"].nunique() > 1:
+        fig, ax = plt.subplots(figsize=(7, 4))
+        sns.lineplot(
+            data=results,
+            x="beans",
+            y="average_error",
+            hue="distribution",
+            marker="o",
+            ax=ax,
+        )
+        ax.set_xlabel("Beans per Student")
+        ax.set_ylabel("Average Error")
+        ax.set_title("Average Error vs Beans")
+        charts["Average Error vs Beans"] = _fig_to_data_uri(fig)
+
+        fig, ax = plt.subplots(figsize=(7, 4))
+        sns.lineplot(
+            data=results,
+            x="beans",
+            y="pct_first_choice",
+            hue="distribution",
+            marker="o",
+            ax=ax,
+        )
+        ax.set_xlabel("Beans per Student")
+        ax.set_ylabel("First Choice Hit Rate")
+        ax.set_title("First Choice Rate vs Beans")
+        ax.set_ylim(0, 1)
+        charts["First Choice vs Beans"] = _fig_to_data_uri(fig)
+
     return charts
 
 
@@ -281,6 +315,16 @@ def parse_args() -> argparse.Namespace:
         help="Penalty mode to test.",
     )
     parser.add_argument(
+        "--bean-range",
+        action="store_true",
+        help="Sweep bean counts from 4 to 100 (multiples of 4) instead of a fixed --beans value.",
+    )
+    parser.add_argument(
+        "--beans-list",
+        type=str,
+        help="Comma-separated list of bean counts to test (overrides --bean-range and --beans).",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=Path("out/simulations"),
@@ -292,6 +336,11 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    bean_values: Sequence[int] | None = None
+    if args.beans_list:
+        bean_values = [int(x.strip()) for x in args.beans_list.split(",") if x.strip()]
+    elif args.bean_range:
+        bean_values = list(range(4, 101, 4))
     results = run_trials(
         args.distributions,
         runs=args.runs,
@@ -299,6 +348,7 @@ def main() -> None:
         n_beans=args.beans,
         penalty=args.penalty,
         seed=args.seed,
+        bean_values=bean_values,
     )
     save_results(results, args.output)
     print(f"Wrote {len(results)} simulation rows to {args.output}")

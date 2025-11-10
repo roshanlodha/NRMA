@@ -18,10 +18,9 @@ ASSIGNMENT_FILENAME = "assignment.csv"
 DEFAULT_SIM_SETTINGS = {
     "runs": 25,
     "students": 80,
-    "beans": 24,
-    "penalty": "beans",
     "seed": 44106,
 }
+SIM_BEAN_VALUES = list(range(4, 101, 4))
 
 
 @app.route("/")
@@ -92,11 +91,7 @@ def simulations():
             settings["students"] = max(
                 4, int(request.form.get("students", settings["students"]))
             )
-            settings["beans"] = max(1, int(request.form.get("beans", settings["beans"])))
             settings["seed"] = int(request.form.get("seed", settings["seed"]))
-            settings["penalty"] = request.form.get(
-                "penalty", settings["penalty"]
-            ).lower()
 
             if not selected_distributions:
                 raise ValueError("Select at least one distribution.")
@@ -105,9 +100,10 @@ def simulations():
                 selected_distributions,
                 runs=settings["runs"],
                 n_students=settings["students"],
-                n_beans=settings["beans"],
-                penalty=settings["penalty"],
+                n_beans=SIM_BEAN_VALUES[0],
+                penalty="beans",
                 seed=settings["seed"],
+                bean_values=SIM_BEAN_VALUES,
             )
             summary = summarize_results(results)
             charts = build_charts(results)
@@ -127,6 +123,7 @@ def simulations():
         results_records=results_records,
         charts=charts,
         error_message=error_message,
+        bean_values=SIM_BEAN_VALUES,
     )
 
 
