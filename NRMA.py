@@ -27,6 +27,7 @@ class AssignmentSummary:
     total_error: float
     average_error: float
     pct_first_choice: float
+    per_student_penalty: float
     output_path: Path | None = None
 
 
@@ -177,6 +178,7 @@ def _summarize_results(
 ) -> AssignmentSummary:
     n_students = len(performance)
     avg_error = total_error / (n_students * n_beans) if n_students else 0
+    avg_penalty = total_error / n_students if n_students else 0
     matches = (
         performance.drop(columns=["studentID", "optimal_rotation"])
         .filter(items=list(ROTATION_TO_ORDER.values()))
@@ -190,6 +192,7 @@ def _summarize_results(
         total_error=total_error,
         average_error=avg_error,
         pct_first_choice=float(pct_first_choice),
+        per_student_penalty=avg_penalty,
     )
 
 
@@ -253,6 +256,7 @@ def main() -> None:
     print(f"Wrote assignments to {args.output}")
     print(f"Total error: {summary.total_error:.2f}")
     print(f"Average error: {summary.average_error:.4f}")
+    print(f"Avg penalty per student: {summary.per_student_penalty:.2f}")
     print(f"First choice hit rate: {summary.pct_first_choice:.2%}")
 
 

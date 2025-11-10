@@ -4,6 +4,7 @@ A modernized toolkit for assigning third-year medical students to clinical rotat
 
 ## Highlights
 - **Web experience** – Upload the Qualtrics/Forms CSV, review summary metrics, and download the optimized `assignment.csv`.
+- **Static runner** – Serve `nrma_static/index.html` from any static host to process preference files without Flask or Python.
 - **Simulation lab** – Explore how the optimizer performs under uniform, clustered, polarized, or custom preference distributions, with charts rendered directly in the browser.
 - **Python API & CLI** – Import `nrma.py` in your own notebooks or run it from the command line for scripted workflows.
 - **Reproducible stress tests** – The `stress_tests.py` CLI mirrors the UI experience and produces CSV summaries for further analysis.
@@ -16,6 +17,7 @@ A modernized toolkit for assigning third-year medical students to clinical rotat
 ├── nrma.py              # Core assignment logic & CLI
 ├── stress_tests.py      # Simulation library + CLI
 ├── templates/           # Shared UI templates (base + upload + simulations)
+├── nrma_static/         # HTML + JS bundle for running assignments in the browser
 ├── uploads/             # Runtime output directory for assignment.csv
 ├── out/, plots/         # Optional analysis artifacts
 ├── responses.csv        # Sample preferences file for local testing

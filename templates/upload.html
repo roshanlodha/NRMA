@@ -22,8 +22,12 @@
       <p>{{ "%.2f"|format(summary.total_error) }}</p>
     </div>
     <div class="stat">
-      <h3>Avg Error</h3>
+      <h3>Normalized Error (δ)</h3>
       <p>{{ "%.4f"|format(summary.average_error) }}</p>
+    </div>
+    <div class="stat">
+      <h3>Avg Penalty (beans)</h3>
+      <p>{{ "%.2f"|format(summary.per_student_penalty) }}</p>
     </div>
     <div class="stat">
       <h3>First Choice</h3>

@@ -147,30 +147,34 @@ def run_trials(
     penalty: str,
     seed: int,
     bean_values: Sequence[int] | None = None,
+    student_values: Sequence[int] | None = None,
 ) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     records = []
     beans_list = list(bean_values) if bean_values else [n_beans]
+    students_list = list(student_values) if student_values else [n_students]
     for key in distribution_keys:
         if key not in DISTRIBUTIONS:
             raise ValueError(f"Unknown distribution '{key}'. Choices: {list(DISTRIBUTIONS)}")
         generator = DISTRIBUTIONS[key].generator
         for beans in beans_list:
-            for run in range(1, runs + 1):
-                preferences = generator(rng, n_students, beans)
-                _, summary = assign_rotations(preferences, penalty=penalty, n_beans=beans)
-                records.append(
-                    {
-                        "distribution": key,
-                        "run": run,
-                        "students": n_students,
-                        "beans": beans,
-                        "penalty": penalty,
-                        "total_error": summary.total_error,
-                        "average_error": summary.average_error,
-                        "pct_first_choice": summary.pct_first_choice,
-                    }
-                )
+            for students in students_list:
+                for run in range(1, runs + 1):
+                    preferences = generator(rng, students, beans)
+                    _, summary = assign_rotations(preferences, penalty=penalty, n_beans=beans)
+                    records.append(
+                        {
+                            "distribution": key,
+                            "run": run,
+                            "students": students,
+                            "beans": beans,
+                            "penalty": penalty,
+                            "total_error": summary.total_error,
+                            "average_error": summary.average_error,
+                            "per_student_penalty": summary.per_student_penalty,
+                            "pct_first_choice": summary.pct_first_choice,
+                        }
+                    )
     return pd.DataFrame(records)
 
 
@@ -182,8 +186,10 @@ def summarize_results(results: pd.DataFrame) -> pd.DataFrame:
                 "runs",
                 "avg_total_error",
                 "avg_average_error",
+                "avg_penalty",
                 "avg_first_choice",
                 "worst_average_error",
+                "worst_penalty",
                 "best_first_choice",
             ]
         )
@@ -194,8 +200,10 @@ def summarize_results(results: pd.DataFrame) -> pd.DataFrame:
             runs=("run", "count"),
             avg_total_error=("total_error", "mean"),
             avg_average_error=("average_error", "mean"),
+            avg_penalty=("per_student_penalty", "mean"),
             avg_first_choice=("pct_first_choice", "mean"),
             worst_average_error=("average_error", "max"),
+            worst_penalty=("per_student_penalty", "max"),
             best_first_choice=("pct_first_choice", "max"),
         )
         .reset_index()
@@ -279,6 +287,34 @@ def build_charts(results: pd.DataFrame) -> Dict[str, str]:
         ax.set_title("First Choice Rate vs Beans")
         ax.set_ylim(0, 1)
         charts["First Choice vs Beans"] = _fig_to_data_uri(fig)
+    if results["students"].nunique() > 1:
+        fig, ax = plt.subplots(figsize=(7, 4))
+        sns.lineplot(
+            data=results,
+            x="students",
+            y="average_error",
+            hue="distribution",
+            marker="o",
+            ax=ax,
+        )
+        ax.set_xlabel("Students")
+        ax.set_ylabel("Average Error")
+        ax.set_title("Average Error vs Students")
+        charts["Average Error vs Students"] = _fig_to_data_uri(fig)
+
+        fig, ax = plt.subplots(figsize=(7, 4))
+        sns.lineplot(
+            data=results,
+            x="students",
+            y="per_student_penalty",
+            hue="distribution",
+            marker="o",
+            ax=ax,
+        )
+        ax.set_xlabel("Students")
+        ax.set_ylabel("Penalty (Beans)")
+        ax.set_title("Penalty per Student vs Students")
+        charts["Penalty vs Students"] = _fig_to_data_uri(fig)
 
     return charts
 
@@ -325,6 +361,16 @@ def parse_args() -> argparse.Namespace:
         help="Comma-separated list of bean counts to test (overrides --bean-range and --beans).",
     )
     parser.add_argument(
+        "--student-range",
+        action="store_true",
+        help="Sweep student counts from 4 to 300 (multiples of 4) instead of a fixed --students value.",
+    )
+    parser.add_argument(
+        "--students-list",
+        type=str,
+        help="Comma-separated list of student counts to test (overrides --student-range and --students).",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=Path("out/simulations"),
@@ -341,6 +387,11 @@ def main() -> None:
         bean_values = [int(x.strip()) for x in args.beans_list.split(",") if x.strip()]
     elif args.bean_range:
         bean_values = list(range(4, 101, 4))
+    student_values: Sequence[int] | None = None
+    if args.students_list:
+        student_values = [int(x.strip()) for x in args.students_list.split(",") if x.strip()]
+    elif args.student_range:
+        student_values = list(range(4, 301, 4))
     results = run_trials(
         args.distributions,
         runs=args.runs,
@@ -349,6 +400,7 @@ def main() -> None:
         penalty=args.penalty,
         seed=args.seed,
         bean_values=bean_values,
+        student_values=student_values,
     )
     save_results(results, args.output)
     print(f"Wrote {len(results)} simulation rows to {args.output}")

@@ -15,18 +15,51 @@
       </div>
       <div>
         <label for="students">Students per run</label>
-        <input type="number" id="students" name="students" min="4" value="{{ settings.students }}" />
+        <input type="number" id="students" name="students" min="4" value="{{ settings.students }}" {% if sweep_mode == 'students' %}readonly{% endif %} />
+        {% if sweep_mode == 'students' %}
+        <small style="color: var(--muted); display: inline-block; margin-top: 0.25rem;">Range is fixed from 4 to 300 when this mode is selected.</small>
+        {% endif %}
+      </div>
+      <div>
+        <label for="beans">Beans per student</label>
+        <input type="number" id="beans" name="beans" min="4" value="{{ settings.beans }}" {% if sweep_mode == 'students' %}readonly{% endif %} />
+        {% if sweep_mode == 'students' %}
+        <small style="color: var(--muted); display: inline-block; margin-top: 0.25rem;">Locked to 24 while sweeping students.</small>
+        {% endif %}
       </div>
       <div>
         <label for="seed">Random seed</label>
         <input type="number" id="seed" name="seed" value="{{ settings.seed }}" />
       </div>
     </div>
+    <h3 style="margin-top: 1.5rem;">Simulation sweep</h3>
+    <div class="sweep-options">
+      <label>
+        <input type="radio" name="sweep_mode" value="beans" {% if sweep_mode != 'students' %}checked{% endif %} />
+        Sweep bean counts (students fixed).
+      </label>
+      <label>
+        <input type="radio" name="sweep_mode" value="students" {% if sweep_mode == 'students' %}checked{% endif %} />
+        Sweep student counts (beans fixed at 24).
+      </label>
+    </div>
+    {% if sweep_mode == 'students' %}
     <p style="margin-top: 1rem; color: var(--muted);">
-      Bean counts are swept automatically (multiples of 4 from 4–100): 
+      Students are swept automatically (multiples of 4 from 4–300):
+      {% for value in student_values %}
+        {{ value }}{% if not loop.last %}, {% endif %}
+      {% endfor %}.
+    </p>
+    {% else %}
+    <p style="margin-top: 1rem; color: var(--muted);">
+      Bean counts are swept automatically (multiples of 4 from 4–100):
       {% for value in bean_values %}
         {{ value }}{% if not loop.last %}, {% endif %}
-      {% endfor %}. Linear penalties are temporarily disabled while we recalibrate.
+      {% endfor %}.
+    </p>
+    {% endif %}
+    <p style="margin-top: 0.5rem; color: var(--muted);">
+      Linear penalties remain disabled while we recalibrate the metrics.
     </p>
 
     <h3 style="margin-top: 1.5rem;">Distributions</h3>
@@ -59,9 +92,11 @@
         <th>Runs</th>
         <th>Avg Total Error</th>
         <th>Avg Error</th>
+        <th>Avg Penalty (beans)</th>
         <th>First Choice</th>
         <th>Best First Choice</th>
         <th>Worst Avg Error</th>
+        <th>Worst Penalty</th>
       </tr>
     </thead>
     <tbody>
@@ -71,9 +106,11 @@
         <td>{{ row.runs }}</td>
         <td>{{ "%.2f"|format(row.avg_total_error) }}</td>
         <td>{{ "%.4f"|format(row.avg_average_error) }}</td>
+        <td>{{ "%.2f"|format(row.avg_penalty) }}</td>
         <td>{{ "%.1f"|format(row.avg_first_choice * 100) }}%</td>
         <td>{{ "%.1f"|format(row.best_first_choice * 100) }}%</td>
         <td>{{ "%.4f"|format(row.worst_average_error) }}</td>
+        <td>{{ "%.2f"|format(row.worst_penalty) }}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -102,7 +139,8 @@
         <th>#</th>
         <th>Distribution</th>
         <th>Total Error</th>
-        <th>Avg Error</th>
+        <th>Norm. Error</th>
+        <th>Penalty (beans)</th>
         <th>First Choice</th>
       </tr>
     </thead>
@@ -113,6 +151,7 @@
         <td>{{ row.distribution }}</td>
         <td>{{ "%.2f"|format(row.total_error) }}</td>
         <td>{{ "%.4f"|format(row.average_error) }}</td>
+        <td>{{ "%.2f"|format(row.per_student_penalty) }}</td>
         <td>{{ "%.1f"|format(row.pct_first_choice * 100) }}%</td>
       </tr>
       {% endfor %}

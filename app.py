@@ -19,8 +19,10 @@ DEFAULT_SIM_SETTINGS = {
     "runs": 25,
     "students": 80,
     "seed": 44106,
+    "beans": 24,
 }
 SIM_BEAN_VALUES = list(range(4, 101, 4))
+SIM_STUDENT_VALUES = list(range(4, 301, 4))
 
 
 @app.route("/")
@@ -80,30 +82,45 @@ def simulations():
     summary_records = []
     charts = {}
     error_message = None
+    sweep_mode = "beans"
 
     if request.method == "POST":
         selected = request.form.getlist("distributions")
         if selected:
             selected_distributions = selected
+        sweep_mode = request.form.get("sweep_mode", sweep_mode)
 
         try:
             settings["runs"] = max(1, int(request.form.get("runs", settings["runs"])))
             settings["students"] = max(
                 4, int(request.form.get("students", settings["students"]))
             )
+            settings["beans"] = max(
+                4, int(request.form.get("beans", settings["beans"]))
+            )
             settings["seed"] = int(request.form.get("seed", settings["seed"]))
 
             if not selected_distributions:
                 raise ValueError("Select at least one distribution.")
 
+            if sweep_mode == "students":
+                # Beans stay fixed at 24 when sweeping student counts.
+                settings["beans"] = 24
+                bean_values = None
+                student_values = SIM_STUDENT_VALUES
+            else:
+                bean_values = SIM_BEAN_VALUES
+                student_values = None
+
             results = run_trials(
                 selected_distributions,
                 runs=settings["runs"],
                 n_students=settings["students"],
-                n_beans=SIM_BEAN_VALUES[0],
+                n_beans=settings["beans"],
                 penalty="beans",
                 seed=settings["seed"],
-                bean_values=SIM_BEAN_VALUES,
+                bean_values=bean_values,
+                student_values=student_values,
             )
             summary = summarize_results(results)
             charts = build_charts(results)
@@ -124,6 +141,8 @@ def simulations():
         charts=charts,
         error_message=error_message,
         bean_values=SIM_BEAN_VALUES,
+        student_values=SIM_STUDENT_VALUES,
+        sweep_mode=sweep_mode,
     )
 
 
