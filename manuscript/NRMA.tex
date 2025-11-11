@@ -161,26 +161,24 @@ The Jonker \& Volgenant algorithm is run on M'' resulting in the final student a
 
 \section{Results}
 \subsection{Simulations.}
-In simulations, we found that the optimal number of beans was highly variable. In general, a minimum number of beans minimized error (Figure \ref{fig:fig1a}) given a uniform-random cost matrix.
-
-As the number of students increases, the total delta error decreased exponentially (Figure \ref{fig:fig1b}).
+Using the modern Monte Carlo simulator, we swept the bean budget for each synthetic preference regime (uniform, single peak, clustered, polarized, and ``top two'') while holding the cohort size at 80 students. First-choice hit rates quickly plateau once students receive roughly 20 beans, although polarized and single-peak cohorts lag because many participants fight for the same rotation order (Figure \ref{fig:fig1a}). The normalized error follows a similar trajectory—additional beans beyond this threshold yield diminishing returns across every distribution (Figure \ref{fig:fig1b}).
 
 \begin{figure}[h]
     \centering
     \begin{subfigure}{0.49\textwidth}
         \centering
         \includegraphics[width=\linewidth]{images/beans_error_beans.png}
-        \caption{$\delta$ as a function of $b$.}
+        \caption{First-choice hit rate as a function of beans per student.}
         \label{fig:fig1a}
     \end{subfigure}
     \hfill
     \begin{subfigure}{0.49\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{images/students_error_beans.png}
-        \caption{$\delta$ as a function of $n$.}
+        \includegraphics[width=\linewidth]{images/beans_error_linear.png}
+        \caption{Normalized average error as a function of beans per student.}
         \label{fig:fig1b}
     \end{subfigure}
-    \caption{$\delta$ tends to increase as the number of beans increases but tends to decrease as the number of students increases.}
+    \caption{Impact of bean budgets on first-choice hit rate and normalized error across simulated preference distributions (80 students, 25 runs per distribution).}
     \label{fig:fig1}
 \end{figure}
 
@@ -275,24 +273,24 @@ In the context of student rotations, the influence of student-determined cost pe
 
 Our algorithm allows for easy modification and elimination of this aspect by having students rank their preferences followed by deterministic assigning a cost penalty to an unfavorable rotation order without the students' consultation. 
 
-Simulations of this method similarly showed decreased error with increased number of students (Figure \ref{fig:fig2a}), indicating that error is roughly constant under a linear penalty regime. In practice, this was not used to allow finer control over students' choices.
+Sweeping cohort size while keeping the bean budget fixed at 24 produced steadily decreasing normalized error curves (Figure \ref{fig:fig2a}) while the per-student penalty converged toward a narrow 10--12 bean band once roughly 80 learners were included (Figure \ref{fig:fig2b}). We continued to prioritize the bean-penalty formulation in practice because it lets students express how undesirable a rotation feels rather than forcing a coarse rank.
 
 \begin{figure}[h]
     \centering
     \begin{subfigure}{0.49\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{images/students_error_linear.png}
-        \caption{$\delta$ as a function of $b$ with a linear penalty.}
+        \includegraphics[width=\linewidth]{images/students_error_beans.png}
+        \caption{Normalized average error as a function of cohort size.}
         \label{fig:fig2a}
     \end{subfigure}
     \hfill
     \begin{subfigure}{0.49\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{images/beans_error_linear.png}
-        \caption{$\delta$ as a function of $n$ with a linear penalty.}
+        \includegraphics[width=\linewidth]{images/students_error_linear.png}
+        \caption{Average penalty per student as a function of cohort size.}
         \label{fig:fig2b}
     \end{subfigure}
-    \caption{$\delta$ tends to increase as the number of beans increases but tends to decrease as the number of students increases.}
+    \caption{Cohort-size sweep (24 beans per student) showing that larger classes reduce normalized error and stabilize the per-student penalty.}
     \label{fig:fig2}
 \end{figure}
 
