@@ -34,16 +34,18 @@ class AssignmentSummary:
 def load_preferences(
     filepath: str | Path,
     *,
-    drop_identifiers: bool = True,
     shuffle: bool = True,
 ) -> pd.DataFrame:
     """
     Load the CSV exported from Qualtrics/Forms and normalize column names.
+    Expects the structure from example_responses.csv:
+    Index 2: caseID
+    Indices 7-10: Bean counts
     """
     preference_df = pd.read_csv(filepath, encoding="cp1252")
 
-    if drop_identifiers:
-        preference_df = preference_df.drop(preference_df.columns[[1, 2]], axis=1)
+    # Select CaseID (idx 2) and the 4 bean columns (idx 7, 8, 9, 10)
+    preference_df = preference_df.iloc[:, [2, 7, 8, 9, 10]]
 
     preference_df = preference_df.set_axis(
         ["studentID"] + list(ROTATION_TO_ORDER.values()), axis=1
@@ -75,12 +77,11 @@ def assign_rotations_from_file(
     *,
     penalty: Penalty = "beans",
     n_beans: int = 24,
-    drop_identifiers: bool = True,
     shuffle: bool = True,
     output_path: str | Path | None = None,
 ) -> Tuple[pd.DataFrame, AssignmentSummary]:
     preference_df = load_preferences(
-        filepath, drop_identifiers=drop_identifiers, shuffle=shuffle
+        filepath, shuffle=shuffle
     )
     performance, summary = assign_rotations(
         preference_df, penalty=penalty, n_beans=n_beans
@@ -231,11 +232,6 @@ def _parse_cli_args() -> argparse.Namespace:
         help="Total number of beans allocated per student.",
     )
     parser.add_argument(
-        "--keep-identifiers",
-        action="store_true",
-        help="Keep identifying columns 2 and 3 instead of dropping them.",
-    )
-    parser.add_argument(
         "--no-shuffle",
         action="store_true",
         help="Disable shuffling before running the optimizer.",
@@ -250,7 +246,6 @@ def main() -> None:
         output_path=args.output,
         penalty=args.penalty,
         n_beans=args.beans,
-        drop_identifiers=not args.keep_identifiers,
         shuffle=not args.no_shuffle,
     )
     print(f"Wrote assignments to {args.output}")

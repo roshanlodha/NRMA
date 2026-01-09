@@ -73,7 +73,6 @@ print(summary)
 Key CLI flags:
 - `--penalty {beans,linear}` – choose bean weighting or rank-based penalties.
 - `--beans N` – total beans per student (default 24).
-- `--keep-identifiers` – prevent automatic removal of identifying columns 2 & 3.
 - `--no-shuffle` – preserve original student order when debugging.
 
 ## Stress-Test CLI
