@@ -38,23 +38,80 @@ def load_preferences(
 ) -> pd.DataFrame:
     """
     Load the CSV exported from Qualtrics/Forms and normalize column names.
-    Expects the structure from example_responses.csv:
-    Index 2: caseID
-    Indices 7-10: Bean counts
+
+    This is intentionally tolerant of historical column format differences:
+    - Student identifier column may be `studentID`, `caseID`, or `Username`.
+    - Bean columns are detected by searching for the rotation strings in
+      `ROTATION_TO_ORDER` (e.g. "LAB – TBC2 – TBC3 – TBC1"), rather than fixed
+      column indices.
     """
-    preference_df = pd.read_csv(filepath, encoding="cp1252")
+    filepath = Path(filepath)
 
-    # Select CaseID (idx 2) and the 4 bean columns (idx 7, 8, 9, 10)
-    preference_df = preference_df.iloc[:, [2, 7, 8, 9, 10]]
+    # Prefer utf-8-sig to strip BOMs; fall back for older exports.
+    last_error: UnicodeDecodeError | None = None
+    for encoding in ("utf-8-sig", "cp1252"):
+        try:
+            preference_df = pd.read_csv(filepath, encoding=encoding)
+            break
+        except UnicodeDecodeError as exc:
+            last_error = exc
+    else:
+        raise last_error  # pragma: no cover
 
-    preference_df = preference_df.set_axis(
-        ["studentID"] + list(ROTATION_TO_ORDER.values()), axis=1
+    preference_df.columns = (
+        preference_df.columns.astype(str)
+        .str.replace("\ufeff", "", regex=False)
+        .str.strip()
     )
 
-    if shuffle:
-        preference_df = preference_df.sample(frac=1).reset_index(drop=True)
+    rotation_strings = list(ROTATION_TO_ORDER.values())
 
-    return preference_df
+    # 1) Identify bean columns by matching rotation-string substrings.
+    col_map: dict[str, str] = {}
+    for rotation in rotation_strings:
+        matches = [col for col in preference_df.columns if rotation in col]
+        if not matches:
+            continue
+        if rotation in matches:
+            col_map[rotation] = rotation
+            continue
+        col_map[rotation] = min(matches, key=len)
+
+    if len(col_map) < N_ROTATIONS:
+        missing = sorted(set(rotation_strings) - set(col_map))
+        raise ValueError(
+            f"Could not find bean columns for {missing} in {filepath}"
+        )
+
+    # 2) Identify student ID column.
+    id_col: str | None = None
+    candidates = [
+        "studentID",
+        "caseID",
+        "caseID (e.g. nbm6)",
+        "Username",
+    ]
+    for candidate in candidates:
+        if candidate in preference_df.columns:
+            id_col = candidate
+            break
+
+    normalized = pd.DataFrame()
+    normalized["studentID"] = (
+        preference_df[id_col] if id_col else preference_df.index
+    )
+
+    for rotation in rotation_strings:
+        normalized[rotation] = (
+            pd.to_numeric(preference_df[col_map[rotation]], errors="coerce")
+            .fillna(0)
+            .astype(int)
+        )
+
+    if shuffle:
+        normalized = normalized.sample(frac=1).reset_index(drop=True)
+
+    return normalized
 
 
 def assign_rotations(
@@ -114,19 +171,37 @@ def _build_cost_matrix(
     cost_matrix = pd.DataFrame.to_numpy(cost_df)
 
     if penalty == "linear":
-        cost_matrix = _cost_to_rank(cost_matrix)
+        cost_matrix = _cost_to_rank(cost_matrix, n_beans=n_beans)
 
     return _pad_matrix(cost_matrix, n_beans)
 
 
-def _cost_to_rank(cost_matrix: np.ndarray) -> np.ndarray:
+def _cost_to_rank(cost_matrix: np.ndarray, n_beans: int) -> np.ndarray:
     """
-    Convert bean counts into a rank preference penalty structure.
+    Convert per-student bean costs into a rank-based penalty structure.
+
+    `cost_matrix` is expected to be shaped `(n_students, N_ROTATIONS)` where each
+    row represents costs derived from beans (lower cost == stronger preference).
+
+    The output is a non-negative matrix scaled into `[0, n_beans]` so that
+    `average_error = total_error / (n_students * n_beans)` remains in `[0, 1]`.
     """
-    ranked = cost_matrix.copy()
-    for rank in range(N_ROTATIONS):
-        ranked[np.where(ranked == np.max(ranked))] = rank - N_ROTATIONS
-    return ranked * -1
+    if cost_matrix.size == 0:
+        return cost_matrix.astype(float)
+    if cost_matrix.shape[1] != N_ROTATIONS:
+        raise ValueError(
+            f"Expected {N_ROTATIONS} rotations per row, got {cost_matrix.shape[1]}."
+        )
+
+    # Argsort is stable so ties preserve option order deterministically.
+    order = np.argsort(cost_matrix, axis=1, kind="mergesort")
+    ranks = np.empty_like(order, dtype=float)
+    for row in range(order.shape[0]):
+        ranks[row, order[row]] = np.arange(N_ROTATIONS, dtype=float)
+
+    if N_ROTATIONS == 1:
+        return np.zeros_like(ranks, dtype=float)
+    return ranks * (n_beans / (N_ROTATIONS - 1))
 
 
 def _pad_matrix(cost: np.ndarray, n_beans: int) -> Tuple[np.ndarray, int]:
