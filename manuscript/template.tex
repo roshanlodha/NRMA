@@ -1,0 +1,344 @@
+\documentclass{article}
+
+\usepackage{arxiv}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{microtype}
+\usepackage{cleveref}
+\usepackage{graphicx}
+\usepackage{subcaption}
+
+\graphicspath{{../figures/}}
+
+\title{Non-random Rotation Matching Algorithm}
+
+\author{
+	Roshan Lodha \\
+	Cleveland Clinic Lerner College of Medicine, Cleveland, OH \\
+	\texttt{lodhar@ccf.org} \\
+	\And
+	Neil Mehta \\
+	Cleveland Clinic Lerner College of Medicine, Cleveland, OH \\
+	\And
+	Craig Nielsen \\
+	Cleveland Clinic Lerner College of Medicine, Cleveland, OH \\
+}
+
+\renewcommand{\shorttitle}{NRMA}
+
+\hypersetup{
+	pdftitle={Non-random Rotation Matching Algorithm},
+	pdfauthor={Roshan Lodha, Neil Mehta, Craig Nielsen},
+	pdfkeywords={Medical Education, Linear Sum Assignment},
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+	Assigning clerkship positions to third-year medical students is crucial for their professional development. However, the process is challenging due to limited positions and the requirement to align students with suitable clerkships matching their interests and career goals. In this paper, we explain our approach of treating clerkship assignments as a linear-sum optimization problem. This optimizes position assignments, minimizing costs. We believe this approach could enhance the clerkship assignment process and improve medical students' learning.
+\end{abstract}
+
+\keywords{Medical Education \and Linear Sum Assignment}
+
+\section{Introduction}
+Third-year medical students engage in core rotations covering internal medicine, surgery, pediatrics, obstetrics, gynecology, neurology, psychiatry, and family medicine. Elective rotations often necessitate prior completion of core rotations; for instance, to take the orthopedics elective, students must first finish the core surgery rotation. This makes students inclined to have preferences regarding the sequence of their rotation assignments.
+
+Currently, rotation matching relies on a stratified-random approach, consuming significant faculty time and introducing bias through stratification criteria. More critically, this method does not permit students to express their desired clerkship order. Here, we propose a student-centered rotation assignment algorithm aimed at achieving the best pairing of students and their preferred order. Importantly, our approach allows students to individually determine the cost of an unfavorable assignment, granting them greater control compared to a ranked preference list.
+
+\section{Methods}
+\subsection{Problem Formulation and Encoding}
+We recast the optimal rotation order challenge as a minimum-cost assignment issue. Each student can select from $k$ rotation orders, each with an associated cost (see \Cref{subsec:costs}). These costs were then utilized to construct an $n \times k$ matrix.
+
+\subsubsection{Determining Costs}
+\label{subsec:costs}
+Students received $b$ ``beans'' and allocated them to the rotation orders at their discretion. Null submissions were allocated $b/k$ beans to each rotation. All responses were scaled so that the sum of beans assigned by each student equated to $b$. The assigned beans for each rotation order were subsequently converted into a cost by subtracting the bean count from $b$. Hyperparameter optimization was applied to ascertain the optimal bean count for a specific application.
+
+\subsubsection{Linear Cost Alternative}
+For enhanced applicability, our algorithm accommodates a ranked-preference-based assignment optimizer along with a beans-to-rank conversion tool. However, in practice, this tool was not utilized (see \Cref{sec:discussion}).
+
+\subsection{Algorithm Design}
+\subsubsection{Matrix Padding}
+Linear sum optimization necessitates a wide or square matrix. Therefore, we introduced phantom students without rotation order preferences until the number of rows became a multiple of $k$. Subsequently, we expanded the matrix to a width of $\lceil n/k \rceil$, resulting in a square matrix. The row order was randomized to eliminate submission time bias in determining rotation order preference.
+
+\subsubsection{Linear Sum Optimization}
+We calculated the optimal rotation order by conducting linear sum optimization on the padded, square cost matrix using Python (SciPy 1.9.3, Python 3.9.6).
+
+\subsection{Error Testing}
+To gauge the rotation assignment's performance, we introduced a novel error metric, $\delta$, defined as
+\begin{equation}
+	\delta = \frac{t}{n b},
+\end{equation}
+where $t$ represents the total cost. $\delta$ is a real number in the range $[0, 1]$, with a lower value indicating closer alignment with the optimal outcome.
+
+\section{Worked Example}
+Consider the following bean assignments matrix $M$ for 7 students and 4 clerkship orders.
+
+\begin{table}[h]
+	\centering
+	\small
+	\begin{tabular}{lrrrr}
+		\toprule
+		         & Order A & Order B & Order C & Order D \\
+		\midrule
+		Student 1 & 8       & 6       & 5       & 5       \\
+		Student 2 & 6       & 5       & 6       & 7       \\
+		Student 3 & 4       & 7       & 5       & 8       \\
+		Student 4 & 7       & 4       & 6       & 7       \\
+		Student 5 & 5       & 6       & 8       & 5       \\
+		Student 6 & 6       & 5       & 4       & 9       \\
+		Student 7 & 5       & 7       & 6       & 6       \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+The sum of each row (the total number of beans assigned by each student) is 24. Thus, the cost associated with a given order can be given by $24 - M_{i,j}$. The number of phantom students is given by $k - (n \bmod k)$, or 1 in this case. Following cost conversion and phantom student insertion, the resulting matrix is given by $M'$.
+
+\begin{table}[h]
+	\centering
+	\small
+	\begin{tabular}{lrrrr}
+		\toprule
+		         & Order A & Order B & Order C & Order D \\
+		\midrule
+		Student 1 & 16      & 18      & 19      & 19      \\
+		Student 2 & 18      & 19      & 18      & 17      \\
+		Student 3 & 20      & 17      & 19      & 16      \\
+		Student 4 & 17      & 20      & 18      & 17      \\
+		Student 5 & 19      & 18      & 16      & 19      \\
+		Student 6 & 18      & 19      & 20      & 15      \\
+		Student 7 & 19      & 17      & 18      & 18      \\
+		Phantom   & 0       & 0       & 0       & 0       \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+This cost matrix is then tiled to form a square matrix, $M''$.
+
+\begin{table}[h]
+	\centering
+	\scriptsize
+	\begin{tabular}{lrrrrrrrr}
+		\toprule
+		         & Order A & Order B & Order C & Order D & Order A & Order B & Order C & Order D \\
+		\midrule
+		Student 1 & 16      & 18      & 19      & 19      & 16      & 18      & 19      & 19      \\
+		\multicolumn{9}{c}{$\cdots$}                                                                 \\
+		Phantom   & 0       & 0       & 0       & 0       & 0       & 0       & 0       & 0       \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+The Jonker \& Volgenant algorithm is run on $M''$ resulting in the final student assignments:
+\begin{itemize}
+	\item Student 1: Order C
+	\item Student 2: Order D
+	\item Student 3: Order A
+	\item Student 4: Order B
+	\item Student 5: Order A
+	\item Student 6: Order C
+	\item Student 7: Order B
+\end{itemize}
+
+\section{Results}
+\subsection{Simulations}
+In simulations, we found that the optimal number of beans was highly variable. In general, a minimum number of beans minimized error (Figure~\ref{fig:delta-vs-beans}) given a uniform-random cost matrix.
+
+As the number of students increases, the total $\delta$ error decreased exponentially (Figure~\ref{fig:delta-vs-students}).
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[t]{0.49\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{figure1a_delta_vs_beans.png}
+		\caption{$\delta$ as a function of $b$.}
+		\label{fig:delta-vs-beans}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{0.49\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{figure1b_delta_vs_students.png}
+		\caption{$\delta$ as a function of $n$.}
+		\label{fig:delta-vs-students}
+	\end{subfigure}
+	\caption{$\delta$ tends to increase as the number of beans increases but tends to decrease as the number of students increases.}
+	\label{fig:figure1}
+\end{figure}
+
+\subsection{Practical deployment}
+\subsubsection{Definition of Parameters}
+We asked $n = 77$ students to assign $b = 24$ beans to any permutation of $k = 4$ possible rotation orders (\Cref{tab:rotation-orders}). We employed a maximum number of $b = 24$ beans per student to allow for integer divisions of beans into preferences. We chose 24 beans as it is $k!$ allowing for integer divisions into each possible category.
+
+\begin{table}[h]
+	\centering
+	\caption{Rotation order definitions.}
+	\label{tab:rotation-orders}
+	\small
+	\begin{tabular}{ccccc}
+		\toprule
+		Option & Clerkship 1 & Clerkship 2 & Clerkship 3 & Clerkship 4 \\
+		\midrule
+		1      & LAB         & TBC2        & TBC3        & TBC1        \\
+		2      & TBC2        & LAB         & TBC1        & TBC3        \\
+		3      & TBC3        & TBC1        & LAB         & TBC2        \\
+		4      & TBC1        & TBC3        & TBC2        & LAB         \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\subsubsection{Initial Deployment}
+Real-world behavior in rotation order selection is poorly modeled by a uniform distribution. Specifically, we found that rotation order 4 $>$ rotation order 3 $>$ rotation order 2 $>$ rotation order 1 (\Cref{tab:beans-by-option}). This led to several students receiving a deeply unfavorable (last choice) clerkship order option. Further testing must be done to determine how the beans-count affects the error under various sampling distributions. We hypothesize that in real-world deployment, increasing the number of beans would decrease the error due to sampling skew and a maximal difference between costs for a given student.
+
+\begin{table}[h]
+	\centering
+	\caption{Summary statistics of beans assignment by clerkship order option.}
+	\label{tab:beans-by-option}
+	\small
+	\begin{tabular}{clrr}
+		\toprule
+		Option & Order               & Beans Assigned & Number All In \\
+		\midrule
+		1      & LAB--TBC2--TBC3--TBC1 & 271           & 2             \\
+		2      & TBC2--LAB--TBC1--TBC3 & 475           & 13            \\
+		3      & TBC3--TBC1--LAB--TBC2 & 859           & 26            \\
+		4      & TBC1--TBC3--TBC2--LAB & 490           & 15            \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\subsubsection{Subsequent Deployment}
+To validate the efficacy of the Non-random Rotation Matching Algorithm (NRMA) in a real-world setting, we analyzed historical preference data from three consecutive academic years (2023--2025). The dataset comprised responses from 229 students (77 in 2023, 77 in 2024, and 75 in 2025).
+
+The algorithm demonstrated consistent performance across all cohorts, achieving a mean first-choice assignment rate of 77.3\% and an average penalty (cost) of 5.40 beans per student (0 indicates a first-choice assignment).
+
+\begin{table}[h]
+	\centering
+	\caption{Performance metrics of the algorithm on historical student cohorts.}
+	\label{tab:cohort-performance}
+	\small
+	\begin{tabular}{crrrr}
+		\toprule
+		Year & Students (N) & First Choice \% & Top 2 \% & Avg.\ Penalty (Beans) \\
+		\midrule
+		2023 & 77           & 72.7\%         & 87.0\%   & 6.26                 \\
+		2024 & 77           & 80.5\%         & 92.2\%   & 4.61                 \\
+		2025 & 75           & 78.7\%         & 92.0\%   & 5.32                 \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+Figures 2a--c summarize how students distributed their 24 beans across the four rotation-order options in each cohort year.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[t]{0.32\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{figure2a_historical_beans_by_option_2023.png}
+		\caption{Year 2023.}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{0.32\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{figure2b_historical_beans_by_option_2024.png}
+		\caption{Year 2024.}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{0.32\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{figure2c_historical_beans_by_option_2025.png}
+		\caption{Year 2025.}
+	\end{subfigure}
+	\caption{Distribution of beans assigned to each rotation-order option by year.}
+	\label{fig:figure2}
+\end{figure}
+
+Figures 3a--c show the distribution of bean penalties (cost) per student for each cohort year.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[t]{0.32\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{figure3a_bean_penalty_density_2023.png}
+		\caption{Year 2023.}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{0.32\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{figure3b_bean_penalty_density_2024.png}
+		\caption{Year 2024.}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{0.32\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{figure3c_bean_penalty_density_2025.png}
+		\caption{Year 2025.}
+	\end{subfigure}
+	\caption{Distribution of bean penalty per student by year.}
+	\label{fig:figure3}
+\end{figure}
+
+\section{Discussion}
+\label{sec:discussion}
+\subsection{Key Findings}
+\subsubsection{Optimal and Complete}
+In our problem, optimality was defined as a rotation order assignment in which no single swap would benefit all students involved in the swap. Completeness was defined as both an equal number of students assigned to each rotation order as well as all students being assigned to exactly 1 rotation order. In the case that the number of students was not 0 in the moduli space $k$, completeness was defined as a difference of no more than 1 student between the most filled and least filled rotation groups. Linear sum optimization provides an optimal solution by definition. Completeness was ensured by matrix padding.
+
+\subsubsection{Optimal Student Strategy}
+In the context of student rotations, the influence of student-determined cost penalties and the variable popularity of different rotations introduces an opportunity for strategic application of game theory principles. Consider the data presented in \Cref{tab:beans-by-option}. In this scenario, a plurality of students preferred rotation option 3, while only a single student preferred option 1. By definition, a maximum of 1/4 of students could be accommodated with their first-choice rotation. Thus, the vast majority of students allocated all their beans to option 3, thereby maximizing their chances of obtaining it. However, since more than 1/4 of the students adopted this strategy several students were randomly assigned to alternative rotations. Given the relative unpopularity of option 1, it is likely that a majority of these students would be assigned to it. Consequently, students may find it advantageous to consider assigning their resources to their second-choice rotation, accepting the possibility of conceding their first-choice.
+
+Our algorithm allows for easy modification and elimination of this aspect by having students rank their preferences followed by deterministic assigning a cost penalty to an unfavorable rotation order without the students' consultation.
+
+Simulations of this method similarly showed decreased error with increased number of students, indicating that error is roughly constant under a linear penalty regime. In practice, this was not used to allow finer control over students' choices.
+
+\subsection{Future Directions}
+\subsubsection{Skewed costs}
+Applying a weight to the cost matrix can skew the results to avoid assigning students to their last-choice preference. For example, adding an exponential penalty would more significantly penalize rotation orders with fewer beans, skewing the optimal result away from those sets of solutions. Our algorithm allows for easy modification of a cost matrix. Hyperparameter optimization should be used to determine the best cost penalty function for a given application.
+
+\subsubsection{Adding distance penalties and car-share benefits}
+Within each rotation, students can be placed at several sites. Suburban hospital campuses pose an additional cost to students in the form of travel. Future iterations of a non-random rotation matching algorithm can modify the cost function based on the distance a student has to travel to a given rotation. An example implementation could be to recursively run the algorithm within each rotation assignment using the distance traveled in miles as the of a rotation. Similarly, students often live with another medical student. To encourage carpooling, the cost function can be further modified to increase the odds that two students are placed in the same rotation.
+
+\subsubsection{Unequal rotation sizes}
+While our usage mandated an equal number of students in each rotation, updating the algorithm for unequal distributions is as simple as modifying the tiling function to include more repetitions of options that can accommodate a higher number of students.
+
+\section{Conclusion}
+Assigning clerkship positions to third-year medical students is a crucial step in their training. However, the process is complex due to limited positions and the need to match students with suitable clerkships. This study proposed a new way to approach this problem, treating it as a linear-sum optimization challenge. By using this method, we aimed to distribute clerkship positions to students in a way that minimizes costs.
+
+The potential impact of this approach is significant. It could improve the efficiency of clerkship assignments and enhance the learning experiences of medical students. As institutions strive to make clerkship placements more effective, this new approach offers a promising avenue. It could lead to better outcomes, ensuring a more productive and valuable educational journey for future medical professionals.
+
+\section*{Acknowledgments}
+This was supported part by the Cleveland Clinic Lerner College of Medicine of Case Western Reserve University. Deployment of this project to the first medical student batch was helped by Dr.\ Neil Mehta and Dr.\ Craig Nielsen of the Cleveland Clinic.
+
+\begin{thebibliography}{9}
+	\bibitem{munkres1957}
+	Munkres, J.
+	\newblock Algorithms for the Assignment and Transportation Problems.
+	\newblock \emph{Journal of the Society for Industrial and Applied Mathematics} (1957); 5(1):32--8.
+
+	\bibitem{crouse2016}
+	Crouse, D.~F.
+	\newblock On implementing 2D rectangular assignment algorithms.
+	\newblock \emph{IEEE Transactions on Aerospace and Electronic Systems} (2016); 52(4):1679--96.
+
+	\bibitem{maclean2021}
+	MacLean, M.~T., Lysikowski, J.~R., Rege, R.~V., Sendelbach, D.~M., and Mihalic, A.~P.
+	\newblock Optimizing Medical Student Clerkship Schedules Using a Novel Application of the Hungarian Algorithm.
+	\newblock \emph{Academic Medicine} (2021); 96(6):864--8.
+
+	\bibitem{kuhn1955}
+	Kuhn, H.~W.
+	\newblock The Hungarian method for the assignment problem.
+	\newblock \emph{Naval Research Logistics Quarterly} (1955); 2(1--2):83--97.
+
+	\bibitem{kuhn1956}
+	Kuhn, H.~W.
+	\newblock Variants of the hungarian method for assignment problems.
+	\newblock \emph{Naval Research Logistics Quarterly} (1956); 3(4):253--8.
+\end{thebibliography}
+
+\end{document}
