@@ -6,8 +6,11 @@ Outputs PNGs to `figures/` and provides helpers to embed them into
 
 Figures currently supported:
 - Simulation delta (average error) vs beans/students under both `beans` and
-  `linear` penalty modes (Figures 1–2 in the manuscript).
-- Historical preference distributions: beans by option, faceted by year.
+  `linear` penalty modes (Figures 1 and 4 in the manuscript).
+- Historical preference distributions: beans by option, split by cohort year
+  (Figure 2a–c).
+- Historical assignment outcomes: per-student bean-penalty distributions split
+  by cohort year (Figure 3a–c).
 """
 
 from __future__ import annotations
@@ -25,6 +28,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
+import numpy as np
 import pandas as pd
 import seaborn as sns
 
@@ -53,7 +57,14 @@ ALT_DELTA_B = "delta as a function of b"
 ALT_DELTA_N = "delta as a function of n"
 ALT_DELTA_B_LINEAR = "delta as a function of b with linear penalty"
 ALT_DELTA_N_LINEAR = "delta as a function of n with linear penalty"
-ALT_HIST_BEANS_BY_OPTION_YEAR = "beans distribution by option by year"
+ALT_HIST_BEANS_BY_OPTION_2023 = "beans distribution by option by year"
+ALT_HIST_BEANS_BY_OPTION_2024 = "beans distribution by option (2024)"
+ALT_HIST_BEANS_BY_OPTION_2025 = "beans distribution by option (2025)"
+ALT_BEAN_PENALTY_DENSITY_2023 = "bean penalty distribution (2023)"
+ALT_BEAN_PENALTY_DENSITY_2024 = "bean penalty distribution (2024)"
+ALT_BEAN_PENALTY_DENSITY_2025 = "bean penalty distribution (2025)"
+
+HISTORICAL_YEARS = (2023, 2024, 2025)
 
 
 def fig_to_base64(fig: matplotlib.figure.Figure, *, dpi: int = 150) -> str:
@@ -184,7 +195,7 @@ def generate_simulation_figures(
         seed=seed,
         bean_values=bean_sweep,
     )
-    outfile = out_dir / "figure2a_delta_vs_beans_linear.png"
+    outfile = out_dir / "figure4a_delta_vs_beans_linear.png"
     _plot_metric(
         bean_results_linear,
         x="beans",
@@ -206,7 +217,7 @@ def generate_simulation_figures(
         seed=seed,
         student_values=student_sweep,
     )
-    outfile = out_dir / "figure2b_delta_vs_students_linear.png"
+    outfile = out_dir / "figure4b_delta_vs_students_linear.png"
     _plot_metric(
         student_results_linear,
         x="students",
@@ -225,7 +236,7 @@ def generate_simulation_figures(
 def _load_historical_preferences(data_dir: Path) -> pd.DataFrame:
     bean_cols = list(ROTATION_TO_ORDER.values())
     frames: list[pd.DataFrame] = []
-    for year in (2023, 2024, 2025):
+    for year in HISTORICAL_YEARS:
         df = load_preferences(data_dir / f"responses{year}.csv", shuffle=False)
         long = df.melt(
             id_vars=["studentID"],
@@ -248,15 +259,29 @@ def generate_historical_figures(
     df = _load_historical_preferences(data_dir)
     option_order = ["Option 1", "Option 2", "Option 3", "Option 4"]
 
-    years = ["2023", "2024", "2025"]
-    fig, axes = plt.subplots(1, len(years), figsize=(13, 3.6), sharey=True)
-    if len(years) == 1:
-        axes = [axes]
-
     palette = sns.color_palette("tab10", n_colors=len(option_order))
+    bean_alts = {
+        2023: ALT_HIST_BEANS_BY_OPTION_2023,
+        2024: ALT_HIST_BEANS_BY_OPTION_2024,
+        2025: ALT_HIST_BEANS_BY_OPTION_2025,
+    }
+    penalty_alts = {
+        2023: ALT_BEAN_PENALTY_DENSITY_2023,
+        2024: ALT_BEAN_PENALTY_DENSITY_2024,
+        2025: ALT_BEAN_PENALTY_DENSITY_2025,
+    }
 
-    for ax, year in zip(axes, years):
-        subset = df[df["year"] == year]
+    outputs: dict[str, Path] = {}
+
+    legend_handles = [
+        Patch(facecolor=color, edgecolor=color, alpha=0.75, label=label)
+        for color, label in zip(palette, option_order)
+    ]
+
+    for idx, year in enumerate(HISTORICAL_YEARS):
+        year_str = str(year)
+        subset = df[df["year"] == year_str]
+        fig, ax = plt.subplots(figsize=(6.2, 3.6))
         sns.kdeplot(
             data=subset,
             x="beans",
@@ -267,38 +292,74 @@ def generate_historical_figures(
             multiple="fill",
             common_norm=False,
             cut=0,
-            clip=(0, 24),
+            clip=(0, BEANS),
             bw_adjust=0.8,
             legend=False,
             ax=ax,
         )
-        ax.set_title(f"Year {year}")
-        ax.set_xlim(-0.5, 24.5)
+        ax.set_title(f"Year {year_str}")
+        ax.set_xlim(-0.5, BEANS + 0.5)
         ax.set_xlabel("Beans Assigned")
-        ax.set_ylabel("Proportion" if ax is axes[0] else "")
+        ax.set_ylabel("Proportion")
         ax.set_ylim(0, 1)
         ax.set_xticks([0, 6, 12, 18, 24])
 
-    legend_handles = [
-        Patch(facecolor=color, edgecolor=color, alpha=0.75, label=label)
-        for color, label in zip(palette, option_order)
-    ]
-    legend = fig.legend(
-        handles=legend_handles,
-        title="Rotation Option",
-        loc="center left",
-        bbox_to_anchor=(1.02, 0.5),
-        frameon=False,
-    )
+        legend = ax.legend(
+            handles=legend_handles,
+            title="Rotation Option",
+            loc="center left",
+            bbox_to_anchor=(1.02, 0.5),
+            frameon=False,
+        )
 
-    outfile = out_dir / "figure3_historical_beans_by_option_year.png"
-    fig.tight_layout()
-    save_kwargs: dict[str, object] = {"dpi": 150, "bbox_inches": "tight"}
-    if legend is not None:
-        save_kwargs["bbox_extra_artists"] = (legend,)
-    fig.savefig(outfile, **save_kwargs)
-    plt.close(fig)
-    return {ALT_HIST_BEANS_BY_OPTION_YEAR: outfile}
+        panel = chr(ord("a") + idx)
+        outfile = out_dir / f"figure2{panel}_historical_beans_by_option_{year_str}.png"
+        fig.tight_layout()
+        save_kwargs: dict[str, object] = {"dpi": 150, "bbox_inches": "tight"}
+        if legend is not None:
+            save_kwargs["bbox_extra_artists"] = (legend,)
+        fig.savefig(outfile, **save_kwargs)
+        plt.close(fig)
+        outputs[bean_alts[year]] = outfile
+
+    from nrma import assign_rotations
+
+    bean_cols = list(ROTATION_TO_ORDER.values())
+    col_index = {col: idx for idx, col in enumerate(bean_cols)}
+    for idx, year in enumerate(HISTORICAL_YEARS):
+        year_str = str(year)
+        prefs = load_preferences(data_dir / f"responses{year_str}.csv", shuffle=False)
+        performance, _ = assign_rotations(prefs, penalty="beans", n_beans=BEANS)
+
+        beans = performance[bean_cols].astype(float)
+        beans = beans.div(beans.sum(axis=1), axis=0).mul(BEANS).fillna(0)
+        assigned_idx = performance["rotation_order"].map(col_index).to_numpy()
+        assigned_beans = beans.to_numpy()[np.arange(len(performance)), assigned_idx]
+        penalties = BEANS - assigned_beans
+
+        fig, ax = plt.subplots(figsize=(6.2, 3.6))
+        sns.kdeplot(
+            x=penalties,
+            fill=True,
+            cut=0,
+            clip=(0, BEANS),
+            bw_adjust=0.8,
+            ax=ax,
+        )
+        ax.set_title(f"Year {year_str}")
+        ax.set_xlabel("Penalty (Beans)")
+        ax.set_ylabel("Density")
+        ax.set_xlim(-0.5, BEANS + 0.5)
+        ax.set_xticks([0, 6, 12, 18, 24])
+
+        panel = chr(ord("a") + idx)
+        outfile = out_dir / f"figure3{panel}_bean_penalty_density_{year_str}.png"
+        fig.tight_layout()
+        fig.savefig(outfile, dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        outputs[penalty_alts[year]] = outfile
+
+    return outputs
 
 
 def _replace_img_src(html: str, *, alt: str, src: str) -> str:
@@ -319,33 +380,7 @@ def embed_figures_in_manuscript(
     html = manuscript_path.read_text(encoding="utf-8")
 
     for alt, path in figures_by_alt.items():
-        if alt in (
-            ALT_DELTA_B,
-            ALT_DELTA_N,
-            ALT_DELTA_B_LINEAR,
-            ALT_DELTA_N_LINEAR,
-        ):
-            html = _replace_img_src(html, alt=alt, src=file_to_data_uri(path))
-
-    if ALT_HIST_BEANS_BY_OPTION_YEAR in figures_by_alt:
-        hist_uri = file_to_data_uri(figures_by_alt[ALT_HIST_BEANS_BY_OPTION_YEAR])
-        if ALT_HIST_BEANS_BY_OPTION_YEAR not in html:
-            insert_at = html.find("<h2>Acknowledgments</h2>")
-            if insert_at == -1:
-                raise ValueError(
-                    "Could not find the Acknowledgments section to insert historical figure."
-                )
-            figure_block = f"""
-    <p>Figure 3 summarizes how students distributed their 24 beans across the four rotation-order options in each cohort year.</p>
-    <figure>
-        <img src=\"{hist_uri}\" alt=\"{ALT_HIST_BEANS_BY_OPTION_YEAR}\">
-        <figcaption style=\"text-align: center; display: block; margin-top: -1rem; margin-bottom: 2rem;\">Figure 3: Distribution of beans assigned to each rotation-order option by year.</figcaption>
-    </figure>
-
-"""
-            html = html[:insert_at] + figure_block + html[insert_at:]
-        else:
-            html = _replace_img_src(html, alt=ALT_HIST_BEANS_BY_OPTION_YEAR, src=hist_uri)
+        html = _replace_img_src(html, alt=alt, src=file_to_data_uri(path))
 
     manuscript_path.write_text(html, encoding="utf-8")
 
