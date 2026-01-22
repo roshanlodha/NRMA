@@ -23,6 +23,8 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 import pandas as pd
 import seaborn as sns
 
@@ -91,7 +93,6 @@ def _plot_metric(
         x=x,
         y=y,
         hue="distribution",
-        marker="o",
         errorbar=("ci", 95),
         ax=ax,
     )
@@ -247,29 +248,56 @@ def generate_historical_figures(
     df = _load_historical_preferences(data_dir)
     option_order = ["Option 1", "Option 2", "Option 3", "Option 4"]
 
-    grid = sns.catplot(
-        data=df,
-        x="option",
-        y="beans",
-        col="year",
-        kind="violin",
-        inner="quartile",
-        cut=0,
-        order=option_order,
-        height=3.4,
-        aspect=0.9,
-        color=sns.color_palette("crest")[2],
-        sharey=True,
-    )
-    grid.set_axis_labels("Rotation Option", "Beans Assigned")
-    grid.set_titles("Year {col_name}")
-    for ax in grid.axes.flat:
-        ax.set_ylim(-0.5, 24.5)
+    years = ["2023", "2024", "2025"]
+    fig, axes = plt.subplots(1, len(years), figsize=(13, 3.6), sharey=True)
+    if len(years) == 1:
+        axes = [axes]
 
-    outfile = out_dir / "historical_beans_by_option_year.png"
-    grid.figure.tight_layout()
-    grid.figure.savefig(outfile, dpi=150, bbox_inches="tight")
-    plt.close(grid.figure)
+    palette = sns.color_palette("tab10", n_colors=len(option_order))
+
+    for ax, year in zip(axes, years):
+        subset = df[df["year"] == year]
+        sns.kdeplot(
+            data=subset,
+            x="beans",
+            hue="option",
+            hue_order=option_order,
+            palette=palette,
+            fill=True,
+            multiple="fill",
+            common_norm=False,
+            cut=0,
+            clip=(0, 24),
+            bw_adjust=0.8,
+            legend=False,
+            ax=ax,
+        )
+        ax.set_title(f"Year {year}")
+        ax.set_xlim(-0.5, 24.5)
+        ax.set_xlabel("Beans Assigned")
+        ax.set_ylabel("Proportion" if ax is axes[0] else "")
+        ax.set_ylim(0, 1)
+        ax.set_xticks([0, 6, 12, 18, 24])
+
+    legend_handles = [
+        Patch(facecolor=color, edgecolor=color, alpha=0.75, label=label)
+        for color, label in zip(palette, option_order)
+    ]
+    legend = fig.legend(
+        handles=legend_handles,
+        title="Rotation Option",
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),
+        frameon=False,
+    )
+
+    outfile = out_dir / "figure3_historical_beans_by_option_year.png"
+    fig.tight_layout()
+    save_kwargs: dict[str, object] = {"dpi": 150, "bbox_inches": "tight"}
+    if legend is not None:
+        save_kwargs["bbox_extra_artists"] = (legend,)
+    fig.savefig(outfile, **save_kwargs)
+    plt.close(fig)
     return {ALT_HIST_BEANS_BY_OPTION_YEAR: outfile}
 
 
